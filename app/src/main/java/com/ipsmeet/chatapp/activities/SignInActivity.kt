@@ -9,7 +9,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
+import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.databinding.ActivitySignInBinding
+import dmax.dialog.SpotsDialog
 import java.util.concurrent.TimeUnit
 
 class SignInActivity : AppCompatActivity() {
@@ -18,7 +24,9 @@ class SignInActivity : AppCompatActivity() {
 
     private lateinit var phoneNo: String
     private lateinit var auth: FirebaseAuth
+    lateinit var database: DatabaseReference
 
+    private lateinit var progress: SpotsDialog
     lateinit var storedVerificationID:String
     lateinit var resendToken: PhoneAuthProvider.ForceResendingToken
     private lateinit var callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
@@ -30,19 +38,23 @@ class SignInActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         auth = FirebaseAuth.getInstance()
+        database = Firebase.database.reference
+
+        progress = SpotsDialog(this, R.style.Custom)
+        progress.setTitle("Please Wait!!")
 
         binding.btnSignIn.setOnClickListener {
+            progress.show()
             startLogin(binding.signInPhoneNumber.text.toString())
         }
 
         callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                startActivity(
-                    Intent(this@SignInActivity, MainActivity::class.java)
-                )
+                updateUI()
             }
 
             override fun onVerificationFailed(e: FirebaseException) {
+                progress.dismiss()
                 Toast.makeText(this@SignInActivity, e.message.toString(), Toast.LENGTH_SHORT).show()
             }
 
@@ -55,6 +67,7 @@ class SignInActivity : AppCompatActivity() {
                 startActivity(
                     Intent(this@SignInActivity, OTPActivity::class.java)
                         .putExtra("storedVerificationID", storedVerificationID)
+                        .putExtra("phoneNumber", binding.signInPhoneNumber.text.toString())
                 )
             }
         }
@@ -66,6 +79,7 @@ class SignInActivity : AppCompatActivity() {
             sendOTP(phoneNo)
         }
         else {
+            progress.dismiss()
             Toast.makeText(this, "Enter phone number!!", Toast.LENGTH_SHORT).show()
         }
     }
@@ -73,12 +87,27 @@ class SignInActivity : AppCompatActivity() {
     private fun sendOTP(number: String) {
         val option = PhoneAuthOptions.newBuilder(auth)
             .setPhoneNumber(number)
-            .setTimeout(30L, TimeUnit.SECONDS)
+            .setTimeout(2L, TimeUnit.MINUTES)
             .setActivity(this)
             .setCallbacks(callbacks)
             .build()
 
         PhoneAuthProvider.verifyPhoneNumber(option)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val signedInUser = auth.currentUser
+        if (signedInUser != null) {
+            updateUI()
+        }
+    }
+
+    private fun updateUI() {
+        progress.dismiss()
+        startActivity(
+            Intent(this@SignInActivity, ProfileActivity::class.java)
+        )
     }
 
 }
