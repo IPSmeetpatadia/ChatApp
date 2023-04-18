@@ -99,7 +99,9 @@ class SignInActivity : AppCompatActivity() {
         super.onStart()
         val signedInUser = auth.currentUser
         if (signedInUser != null) {
-            updateUI()
+            startActivity(
+                Intent(this@SignInActivity, MainActivity::class.java)
+            )
         }
     }
 

@@ -14,13 +14,11 @@ import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.databinding.ActivityProfileBinding
 import com.ipsmeet.chatapp.dataclasses.SignInDataClass
 import dmax.dialog.SpotsDialog
-import java.text.SimpleDateFormat
-import java.util.*
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
-    private lateinit var imgURI: Uri
+    private var imgURI: Uri? = null
     private lateinit var progress: SpotsDialog
 
     private var databaseReference = FirebaseDatabase.getInstance()
@@ -44,7 +42,7 @@ class ProfileActivity : AppCompatActivity() {
 
         binding.btnSaveProfile.setOnClickListener {
             progress.show()
-            addUser(phoneNumber)
+            addUser()
             uploadImage()
             updateUI()
         }
@@ -73,10 +71,9 @@ class ProfileActivity : AppCompatActivity() {
     private fun uploadImage() {
         progress.show()
 
-        val fileName = SimpleDateFormat("yyyy_MM_dd_HH_mm", Locale.getDefault()).format(Date())
-        val storageReference = FirebaseStorage.getInstance().getReference("Images/*$fileName")
+        val storageReference = FirebaseStorage.getInstance().getReference("Images/*${ FirebaseAuth.getInstance().currentUser!!.uid }")
 
-        storageReference.putFile(imgURI)
+        storageReference.putFile(imgURI!!)
             .addOnSuccessListener {
                 progress.dismiss()
             }
@@ -85,17 +82,18 @@ class ProfileActivity : AppCompatActivity() {
             }
     }
 
-    private fun addUser(phoneNumber: String?) {
+    private fun addUser() {
         val addUser = SignInDataClass(
-            imgURI.buildUpon().build().toString(),
+            imgURI?.buildUpon()?.build().toString(),
             binding.profileEdtxtName.text.toString(),
             binding.profileEdtxtContact.text.toString()
         )
 
         val userID = FirebaseAuth.getInstance().currentUser!!.uid
-        databaseReference.getReference("Users/$userID").child(phoneNumber.toString()).setValue(addUser)
+        databaseReference.getReference("Users/$userID").setValue(addUser)
         /**
         database.child("Users").child(userID).child(phoneNumber.toString()).setValue(addUser)
         */
     }
+
 }
