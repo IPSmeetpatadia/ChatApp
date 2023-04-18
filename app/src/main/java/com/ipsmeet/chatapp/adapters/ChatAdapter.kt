@@ -15,7 +15,7 @@ import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import java.io.File
 
-class ChatAdapter(private val context: Context, private val chatList: List<UserDataClass>): RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
+class ChatAdapter(private val context: Context, private val chatList: List<UserDataClass>, val listener: OnClick): RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
 
     class ChatViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val profileImg: ImageView = itemView.findViewById(R.id.chat_imgView)
@@ -45,7 +45,15 @@ class ChatAdapter(private val context: Context, private val chatList: List<UserD
                     Log.d("Fail to load chat profiles", it.message.toString())
                 }
             name.text = chatList[position].userName
+
+            itemView.setOnClickListener {
+                listener.openChat(chatList[position].key)
+            }
         }
+    }
+
+    interface OnClick {
+        fun openChat(key: String)
     }
 
 }

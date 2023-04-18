@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -45,7 +46,16 @@ class MainActivity : AppCompatActivity() {
                             chatData.add(showData)
                             binding.mainRecyclerView.apply {
                                 layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
-                                adapter = ChatAdapter(this@MainActivity, chatData)
+                                adapter = ChatAdapter(this@MainActivity, chatData,
+                                object : ChatAdapter.OnClick {
+                                    override fun openChat(key: String) {
+                                        startActivity(
+                                            Intent(this@MainActivity, ChatActivity::class.java)
+                                                .putExtra("userID", key)
+                                        )
+                                    }
+                                })
+                                addItemDecoration(DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL))
                             }
                         }
                     }
@@ -73,6 +83,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(
                     Intent(this, SignInActivity::class.java)
                 )
+                finish()
             }
         }
         return super.onOptionsItemSelected(item)

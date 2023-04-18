@@ -60,6 +60,7 @@ class OTPActivity : AppCompatActivity() {
             Intent(this@OTPActivity, ProfileActivity::class.java)
                 .putExtra("phoneNum", "+91 $phoneNumber")
         )
+        finish()
     }
 
 }
