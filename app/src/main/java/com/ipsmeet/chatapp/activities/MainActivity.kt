@@ -1,11 +1,16 @@
 package com.ipsmeet.chatapp.activities
 
+import android.app.Dialog
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
@@ -16,6 +21,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.adapters.ChatAdapter
 import com.ipsmeet.chatapp.databinding.ActivityMainBinding
+import com.ipsmeet.chatapp.databinding.LayoutDialogBinding
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 
 class MainActivity : AppCompatActivity() {
@@ -78,12 +84,25 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.menu_signOut -> {
-                Firebase.auth.signOut()
+                val bindDialog :LayoutDialogBinding = LayoutDialogBinding.inflate(LayoutInflater.from(this))
 
-                startActivity(
-                    Intent(this, SignInActivity::class.java)
-                )
-                finish()
+                val dialog = Dialog(this)
+                dialog.setContentView(bindDialog.root)
+                dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                dialog.show()
+
+                bindDialog.signOutYes.setOnClickListener {
+                    Firebase.auth.signOut()
+
+                    startActivity(
+                        Intent(this, SignInActivity::class.java)
+                    )
+                    finish()
+                }
+
+                bindDialog.signOutNo.setOnClickListener {
+                    dialog.dismiss()
+                }
             }
         }
         return super.onOptionsItemSelected(item)

@@ -21,4 +21,12 @@
         <item name="DialogSpotColor">@color/aquamarine5</item>
         <item name="DialogSpotCount">8</item>
     </style>
+
+    <!--  Dialog  -->
+    <style name="Dialog">
+        <item name="android:windowBackground">@drawable/empty_bacc</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowMinWidthMajor">80%</item>
+        <item name="windowActionBar">false</item>
+    </style>
 </resources>
