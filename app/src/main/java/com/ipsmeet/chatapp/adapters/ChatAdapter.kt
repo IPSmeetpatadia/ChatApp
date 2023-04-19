@@ -39,7 +39,7 @@ class ChatAdapter(private val context: Context, private val chatList: List<UserD
             FirebaseStorage.getInstance()
                 .getReference("Images/*${chatList[position].key}").getFile(localFile).addOnSuccessListener {
                     val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
-                    Glide.with(context).load(bitmap).into(profileImg)
+                    Glide.with(context.applicationContext).load(bitmap).into(profileImg)
                 }
                 .addOnFailureListener {
                     Log.d("Fail to load chat profiles", it.message.toString())
