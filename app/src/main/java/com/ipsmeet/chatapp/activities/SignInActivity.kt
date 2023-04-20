@@ -10,7 +10,6 @@ import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.ipsmeet.chatapp.R
@@ -24,7 +23,7 @@ class SignInActivity : AppCompatActivity() {
 
     private lateinit var phoneNo: String
     private lateinit var auth: FirebaseAuth
-    lateinit var database: DatabaseReference
+    private lateinit var database: DatabaseReference
 
     private lateinit var progress: SpotsDialog
     lateinit var storedVerificationID:String
@@ -108,7 +107,7 @@ class SignInActivity : AppCompatActivity() {
     private fun updateUI() {
         progress.dismiss()
         startActivity(
-            Intent(this@SignInActivity, ProfileActivity::class.java)
+            Intent(this@SignInActivity, CreateProfileActivity::class.java)
         )
     }
 

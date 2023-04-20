@@ -57,8 +57,11 @@ class OTPActivity : AppCompatActivity() {
     private fun updateUI() {
         progress.dismiss()
         startActivity(
-            Intent(this@OTPActivity, ProfileActivity::class.java)
+            Intent(this@OTPActivity, CreateProfileActivity::class.java)
                 .putExtra("phoneNum", "+91 $phoneNumber")
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         )
         finish()
     }

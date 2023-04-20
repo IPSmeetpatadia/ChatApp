@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_profile"
+        android:title="Profile"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/menu_signOut"
         android:title="Sign Out"
         app:showAsAction="never"/>

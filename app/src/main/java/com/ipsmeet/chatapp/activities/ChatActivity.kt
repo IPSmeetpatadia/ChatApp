@@ -52,10 +52,7 @@ class ChatActivity : AppCompatActivity() {
         Log.d("timestamp", Date().time.toString())
 
         binding.commsBack.setOnClickListener {
-            startActivity(
-                Intent(this, MainActivity::class.java)
-            )
-            finish()
+            updateUI()
         }
 
         val linearLayoutManager = LinearLayoutManager(this)
@@ -151,6 +148,22 @@ class ChatActivity : AppCompatActivity() {
         override fun afterTextChanged(s: Editable?) {
             binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.isNotEmpty()
         }
+    }
+
+
+    private fun updateUI() {
+        startActivity(
+            Intent(this, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        )
+        finish()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        updateUI()
     }
 
 }

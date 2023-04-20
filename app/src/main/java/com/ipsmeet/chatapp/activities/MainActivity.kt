@@ -10,7 +10,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
@@ -83,6 +82,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
+            R.id.menu_profile -> {
+                startActivity(Intent(this, ProfileActivity::class.java))
+            }
+
             R.id.menu_signOut -> {
                 val bindDialog :LayoutDialogBinding = LayoutDialogBinding.inflate(LayoutInflater.from(this))
 
@@ -93,11 +96,8 @@ class MainActivity : AppCompatActivity() {
 
                 bindDialog.signOutYes.setOnClickListener {
                     Firebase.auth.signOut()
-
-                    startActivity(
-                        Intent(this, SignInActivity::class.java)
-                    )
-                    finish()
+                    updateUI()
+                    dialog.dismiss()
                 }
 
                 bindDialog.signOutNo.setOnClickListener {
@@ -106,6 +106,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun updateUI() {
+        startActivity(
+            Intent(this, SignInActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        )
+        finish()
     }
 
 }
