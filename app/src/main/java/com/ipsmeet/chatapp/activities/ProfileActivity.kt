@@ -27,7 +27,6 @@ import dmax.dialog.SpotsDialog
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
@@ -53,12 +52,11 @@ class ProfileActivity : AppCompatActivity() {
             updateUI()
         }
 
+        //  FETCHING USER DETAILS
         databaseReference = FirebaseDatabase.getInstance().getReference("Users/$userID")
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                Log.d("snapshot", snapshot.key.toString())
-                Log.d("userID", userID)
-
+                //  fetching user's profile image from firebase-storage
                 val localFile = File.createTempFile("tempfile", "jpeg")
                 FirebaseStorage.getInstance()
                     .getReference("Images/*${snapshot.key}").getFile(localFile)
@@ -70,6 +68,7 @@ class ProfileActivity : AppCompatActivity() {
                         Log.d("Fail to load user profiles", it.message.toString())
                     }
 
+                //  fetching user's name and phone-number from firebase-realtime-database
                 val userProfile = snapshot.getValue(SignInDataClass::class.java)
                 binding.userTxtName.text = userProfile!!.userName
                 binding.userTxtPhone.text = userProfile.phoneNumber
@@ -102,10 +101,11 @@ class ProfileActivity : AppCompatActivity() {
         //  SELECT IMAGE FROM CAMERA
         bottomSheetDialog.findViewById<ConstraintLayout>(R.id.updateUser_layoutCam)
             ?.setOnClickListener {
-                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT,  MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
+                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)  // have the camera application capture an image and return it
+                    .putExtra(MediaStore.EXTRA_OUTPUT,  MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
+
                 if (cameraIntent.resolveActivity(this.packageManager) != null) {
-                    startActivityForResult(cameraIntent, 1888)
+                    startActivityForResult(cameraIntent, 1888)  // camera request code = 1888
                 }
 
                 bottomSheetDialog.dismiss()
@@ -121,6 +121,7 @@ class ProfileActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+
         if (requestCode == 1888 && resultCode == RESULT_OK) {
             photo = data!!.extras!!["data"] as Bitmap
             binding.userProfileImg.setImageBitmap(photo)
@@ -130,7 +131,7 @@ class ProfileActivity : AppCompatActivity() {
             val bitmap = (binding.userProfileImg.drawable as BitmapDrawable).bitmap
             val baos = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-            byteArray = baos.toByteArray()
+            byteArray = baos.toByteArray()  // to upload we need `ByteArray`
             uploadImageBITMAP()
         }
     }
@@ -139,7 +140,6 @@ class ProfileActivity : AppCompatActivity() {
         progress.show()
 
         val storageReference = FirebaseStorage.getInstance().getReference("Images/*$userID")
-
         storageReference.putBytes(byteArray)
             .addOnSuccessListener {
                 progress.dismiss()
@@ -216,9 +216,9 @@ class ProfileActivity : AppCompatActivity() {
     private fun updateUI() {
         startActivity(
             Intent(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)   // all of the other activities on top of it will be closed
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
         finish()
     }

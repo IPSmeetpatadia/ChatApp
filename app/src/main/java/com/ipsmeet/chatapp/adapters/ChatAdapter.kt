@@ -15,7 +15,8 @@ import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import java.io.File
 
-class ChatAdapter(private val context: Context, private val chatList: List<UserDataClass>, val listener: OnClick): RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
+class ChatAdapter(private val context: Context, private val chatList: List<UserDataClass>, private val listener: OnClick)
+    : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
 
     class ChatViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val profileImg: ImageView = itemView.findViewById(R.id.chat_imgView)
@@ -33,9 +34,9 @@ class ChatAdapter(private val context: Context, private val chatList: List<UserD
     }
 
     override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
-        val localFile = File.createTempFile("tempfile", "jpeg")
-
         holder.apply {
+            //  FETCHING USER'S PROFILE IMAGES
+            val localFile = File.createTempFile("tempfile", "jpeg")
             FirebaseStorage.getInstance()
                 .getReference("Images/*${chatList[position].key}").getFile(localFile).addOnSuccessListener {
                     val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
@@ -44,8 +45,10 @@ class ChatAdapter(private val context: Context, private val chatList: List<UserD
                 .addOnFailureListener {
                     Log.d("Fail to load chat profiles", it.message.toString())
                 }
+            //  FETCHING USER'S NAMES
             name.text = chatList[position].userName
 
+            //  ITEM-CLICK LISTENER
             itemView.setOnClickListener {
                 listener.openChat(chatList[position].key)
             }
@@ -53,7 +56,7 @@ class ChatAdapter(private val context: Context, private val chatList: List<UserD
     }
 
     interface OnClick {
-        fun openChat(key: String)
+        fun openChat(key: String)   //  passing user's ID, on ItemClickListener
     }
 
 }

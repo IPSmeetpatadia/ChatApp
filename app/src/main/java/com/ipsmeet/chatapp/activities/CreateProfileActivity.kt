@@ -35,9 +35,10 @@ class CreateProfileActivity : AppCompatActivity() {
 
         userID = FirebaseAuth.getInstance().currentUser!!.uid
 
-        val phoneNumber = intent.getStringExtra("phoneNum").toString()
+        val phoneNumber = intent.getStringExtra("phoneNum").toString()  // Receiving `phoneNum` passed through Intent()
         binding.profileEdtxtContact.setText(phoneNumber)
 
+        //  IF USER ALREADY EXISTS, FETCHING USER'S DETAILS (or will create new user)
         databaseReference = FirebaseDatabase.getInstance().getReference("Users")
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -93,9 +94,9 @@ class CreateProfileActivity : AppCompatActivity() {
         progress.dismiss()
         startActivity(
             Intent(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)   // all of the other activities on top of it will be closed
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
     }
 

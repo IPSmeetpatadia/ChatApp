@@ -16,7 +16,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
 import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.adapters.ChatAdapter
 import com.ipsmeet.chatapp.databinding.ActivityMainBinding
@@ -41,10 +40,12 @@ class MainActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         databaseReference = FirebaseDatabase.getInstance().getReference("Users")
 
+        //  DISPLAYING ALL USERS IN AS CHAT, BUT AVOIDING LOGGED-IN USER
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     for (item in snapshot.children) {
+                        //  to avoid logged-in user
                         if (item.key.toString() != FirebaseAuth.getInstance().currentUser!!.uid) {
                             val showData = item.getValue(UserDataClass::class.java)
                             showData!!.key = item.key.toString()
@@ -53,7 +54,7 @@ class MainActivity : AppCompatActivity() {
                                 layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
                                 adapter = ChatAdapter(this@MainActivity, chatData,
                                 object : ChatAdapter.OnClick {
-                                    override fun openChat(key: String) {
+                                    override fun openChat(key: String) {    //  open chat
                                         startActivity(
                                             Intent(this@MainActivity, ChatActivity::class.java)
                                                 .putExtra("userID", key)
@@ -71,8 +72,6 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity ~ Database Error", error.message)
             }
         })
-
-        FirebaseStorage.getInstance()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -111,9 +110,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateUI() {
         startActivity(
             Intent(this, SignInActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)   // all of the other activities on top of it will be closed
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
         finish()
     }

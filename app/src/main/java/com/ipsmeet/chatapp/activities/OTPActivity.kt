@@ -26,10 +26,9 @@ class OTPActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         auth = FirebaseAuth.getInstance()
-        phoneNumber = intent.getStringExtra("phoneNumber").toString()
+        phoneNumber = intent.getStringExtra("phoneNumber").toString()   // Receiving `phoneNum` passed through Intent()
 
         progress = SpotsDialog(this, R.style.Custom)
-        progress.setTitle("Please Wait!!")
 
         val storedVerificationID = intent.getStringExtra("storedVerificationID")
 
@@ -59,9 +58,9 @@ class OTPActivity : AppCompatActivity() {
         startActivity(
             Intent(this@OTPActivity, CreateProfileActivity::class.java)
                 .putExtra("phoneNum", "+91 $phoneNumber")
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)   // all of the other activities on top of it will be closed
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
         finish()
     }

@@ -39,17 +39,12 @@ class ChatActivity : AppCompatActivity() {
 
         firebaseDatabase = FirebaseDatabase.getInstance()
 
-        val senderID = FirebaseAuth.getInstance().currentUser!!.uid
-        val receiverID = intent.getStringExtra("userID")
-        Log.d("senderID", senderID)
-        Log.d("receiverID", receiverID.toString())
+        val senderID = FirebaseAuth.getInstance().currentUser!!.uid   // ID of logged-in user
+        val receiverID = intent.getStringExtra("userID")   // ID of other person
 
+        //  CREATING ROOM, FOR CHAT, TO STORE DATA USER-VISE
         senderRoom = senderID + receiverID
         receiverRoom = receiverID + senderID
-        Log.d("senderRoom", senderRoom)
-        Log.d("receiverRoom", receiverRoom)
-
-        Log.d("timestamp", Date().time.toString())
 
         binding.commsBack.setOnClickListener {
             updateUI()
@@ -64,15 +59,16 @@ class ChatActivity : AppCompatActivity() {
             adapter = messagesAdapter
         }
 
+        //  FETCHING USER DATA, WHO'S CHAT IS OPEN
         databaseReference = FirebaseDatabase.getInstance().getReference("Users/$receiverID")
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     val data = snapshot.getValue(UserDataClass::class.java)
                     data!!.key = snapshot.key.toString()
-                    Log.d("snapshot.key", snapshot.key.toString())
                     binding.commsName.text = data.userName
 
+                    //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
                     val localFile = File.createTempFile("tempfile", "jpeg")
                     FirebaseStorage.getInstance()
                         .getReference("Images/*${snapshot.key}").getFile(localFile)
@@ -91,6 +87,7 @@ class ChatActivity : AppCompatActivity() {
             }
         })
 
+        //  FETCHING CHATS
         chatReference = FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Messages")
         chatReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -119,6 +116,7 @@ class ChatActivity : AppCompatActivity() {
                 timeStamp = Date().time.toFloat()
             )
 
+            //  CREATING CHAT-ROOM TO STORE CHATS
             firebaseDatabase.getReference("Chats")
                 .child(senderRoom)
                 .child("Messages")
@@ -154,9 +152,9 @@ class ChatActivity : AppCompatActivity() {
     private fun updateUI() {
         startActivity(
             Intent(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)   // all of the other activities on top of it will be closed
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
         finish()
     }
