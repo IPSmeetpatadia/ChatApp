@@ -22,6 +22,14 @@
         <item name="DialogSpotCount">8</item>
     </style>
 
+    <!--  Custom ProgressDialog  -->
+    <style name="Custom2" parent="android:Theme.DeviceDefault.Dialog">
+        <item name="DialogTitleAppearance">@android:style/TextAppearance.Medium</item>
+        <item name="DialogTitleText">Updating...</item>
+        <item name="DialogSpotColor">@color/aquamarine5</item>
+        <item name="DialogSpotCount">8</item>
+    </style>
+
     <!--  Dialog  -->
     <style name="Dialog">
         <item name="android:windowBackground">@drawable/empty_bacc</item>
