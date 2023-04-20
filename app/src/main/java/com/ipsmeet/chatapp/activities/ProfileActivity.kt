@@ -8,6 +8,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,10 +34,9 @@ class ProfileActivity : AppCompatActivity() {
     lateinit var userID: String
     private lateinit var progress: SpotsDialog
     private lateinit var photo: Bitmap
-    lateinit var byteArray: ByteArray
+    private lateinit var byteArray: ByteArray
     private lateinit var imgURI: Uri
 
-    lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var databaseReference: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,22 +81,22 @@ class ProfileActivity : AppCompatActivity() {
         })
 
         binding.userEditImg.setOnClickListener {
-            showBottomSheet()
+            updateIMG()
         }
 
         binding.userEditName.setOnClickListener {
-
+            updateNAME()
         }
 
         binding.userEditAbout.setOnClickListener {
-
+            updateABOUT()
         }
 
     }
 
-    private fun showBottomSheet() {
+    private fun updateIMG() {
         val bottomSheetDialog = BottomSheetDialog(this)
-        bottomSheetDialog.setContentView(R.layout.bsn_edit_img)
+        bottomSheetDialog.setContentView(R.layout.bsd_edit_img)
         bottomSheetDialog.show()
 
         //  SELECT IMAGE FROM CAMERA
@@ -163,7 +164,6 @@ class ProfileActivity : AppCompatActivity() {
             progress.show()
 
             val storageReference = FirebaseStorage.getInstance().getReference("Images/*$userID")
-
             storageReference.putFile(imgURI)
                 .addOnSuccessListener {
                     progress.dismiss()
@@ -172,6 +172,46 @@ class ProfileActivity : AppCompatActivity() {
                     Toast.makeText(this, "Fail", Toast.LENGTH_SHORT).show()
                 }
         }
+
+    private fun updateNAME() {
+        val bottomSheetDialog = BottomSheetDialog(this, R.style.BottomSheetDialog)
+        bottomSheetDialog.setContentView(R.layout.bsd_edit_name)
+        bottomSheetDialog.show()
+
+        val name = bottomSheetDialog.findViewById<EditText>(R.id.user_edtxtName)
+        name!!.setText(binding.userTxtName.text.toString())
+
+        bottomSheetDialog.findViewById<TextView>(R.id.user_txtSave)
+            ?.setOnClickListener {
+                FirebaseDatabase.getInstance().getReference("Users/$userID").child("userName").setValue(name.text.toString())
+                bottomSheetDialog.dismiss()
+            }
+
+        bottomSheetDialog.findViewById<TextView>(R.id.user_txtCancel)
+            ?.setOnClickListener {
+                bottomSheetDialog.dismiss()
+            }
+    }
+
+    private fun updateABOUT() {
+        val bottomSheetDialog = BottomSheetDialog(this, R.style.BottomSheetDialog)
+        bottomSheetDialog.setContentView(R.layout.bsd_edit_about)
+        bottomSheetDialog.show()
+
+        val about = bottomSheetDialog.findViewById<EditText>(R.id.user_edtxtAbout)
+        about!!.setText(binding.userTxtAbout.text.toString())
+
+        bottomSheetDialog.findViewById<TextView>(R.id.user_txtSaveAbout)
+            ?.setOnClickListener {
+                FirebaseDatabase.getInstance().getReference("Users/$userID").child("about").setValue(about.text.toString())
+                bottomSheetDialog.dismiss()
+            }
+
+        bottomSheetDialog.findViewById<TextView>(R.id.user_txtCancelAbout)
+            ?.setOnClickListener {
+                bottomSheetDialog.dismiss()
+            }
+    }
 
     private fun updateUI() {
         startActivity(
