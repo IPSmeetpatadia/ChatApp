@@ -57,7 +57,7 @@ class OTPActivity : AppCompatActivity() {
         progress.dismiss()
         startActivity(
             Intent(this@OTPActivity, CreateProfileActivity::class.java)
-                .putExtra("phoneNum", "+91 $phoneNumber")
+                .putExtra("phoneNum", "+91$phoneNumber")
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)   // all of the other activities on top of it will be closed
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished

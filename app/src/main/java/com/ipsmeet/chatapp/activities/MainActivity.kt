@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
@@ -18,17 +19,22 @@ import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
 import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.adapters.ChatAdapter
+import com.ipsmeet.chatapp.adapters.FoundUserAdapter
 import com.ipsmeet.chatapp.databinding.ActivityMainBinding
+import com.ipsmeet.chatapp.databinding.LayoutAddFriendsBinding
 import com.ipsmeet.chatapp.databinding.LayoutDialogBinding
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var bindingDialog: LayoutAddFriendsBinding
 
+    lateinit var userID: String
     private lateinit var auth: FirebaseAuth
     private lateinit var databaseReference: DatabaseReference
 
+    var listPhoneNumbers = arrayListOf<String>()
     var chatData = arrayListOf<UserDataClass>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,32 +44,50 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         auth = FirebaseAuth.getInstance()
-        databaseReference = FirebaseDatabase.getInstance().getReference("Users")
+        userID = auth.currentUser!!.uid
 
-        //  DISPLAYING ALL USERS IN AS CHAT, BUT AVOIDING LOGGED-IN USER
+        //  DISPLAYING FRIENDS AS CHAT
+        databaseReference = FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                chatData.clear()
                 if (snapshot.exists()) {
                     for (item in snapshot.children) {
-                        //  to avoid logged-in user
-                        if (item.key.toString() != FirebaseAuth.getInstance().currentUser!!.uid) {
-                            val showData = item.getValue(UserDataClass::class.java)
-                            showData!!.key = item.key.toString()
-                            chatData.add(showData)
-                            binding.mainRecyclerView.apply {
-                                layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
-                                adapter = ChatAdapter(this@MainActivity, chatData,
-                                object : ChatAdapter.OnClick {
-                                    override fun openChat(key: String) {    //  open chat
-                                        startActivity(
-                                            Intent(this@MainActivity, ChatActivity::class.java)
-                                                .putExtra("userID", key)
-                                        )
+                        Log.d("item", item.value.toString())
+
+                        FirebaseDatabase.getInstance().getReference("Users")
+                            .addValueEventListener(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    if (snapshot.exists()) {
+                                        for (i in snapshot.children) {
+                                            if (i.key.toString() == item.value.toString()) {
+                                                val showData = i.getValue(UserDataClass::class.java)
+                                                showData!!.key = i.key.toString()
+                                                Log.d("showData.phoneNumber", showData.phoneNumber)
+                                                chatData.add(showData)
+
+                                                binding.mainRecyclerView.apply {
+                                                    layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL,false)
+                                                    adapter = ChatAdapter(this@MainActivity, chatData,
+                                                            object : ChatAdapter.OnClick {
+                                                                override fun openChat(key: String) {    //  open chat
+                                                                    startActivity(
+                                                                        Intent(this@MainActivity, ChatActivity::class.java)
+                                                                            .putExtra("userID", key)
+                                                                    )
+                                                                }
+                                                            })
+                                                    addItemDecoration(DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL))
+                                                }
+                                            }
+                                        }
                                     }
-                                })
-                                addItemDecoration(DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL))
-                            }
-                        }
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    Log.d("MainActivity ~ Database Error", error.message)
+                                }
+                            })
                     }
                 }
             }
@@ -80,13 +104,72 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId) {
+        when (item.itemId) {
+            R.id.menu_addFriend -> {
+                Log.d("phone numbers", listPhoneNumbers.toString())
+                bindingDialog = LayoutAddFriendsBinding.inflate(LayoutInflater.from(this))
+
+                val dialog = Dialog(this)
+                dialog.setContentView(bindingDialog.root)
+                dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                dialog.show()
+
+                bindingDialog.layoutSearch.setOnClickListener {
+                    var matchedNumber = ""
+
+                    FirebaseDatabase.getInstance().getReference("Users")
+                        .addValueEventListener(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if (snapshot.exists()) {
+                                    for (i in snapshot.children) {
+                                        val user = i.getValue(UserDataClass::class.java)
+                                        user!!.key = i.key.toString()
+                                        listPhoneNumbers.add(user.phoneNumber)
+                                        Log.d("listPhoneNumbers", listPhoneNumbers.toString())
+
+                                        for (num in listPhoneNumbers) {
+                                            if (bindingDialog.edtxtFindPhone.text.toString() == num) {
+                                                Toast.makeText(this@MainActivity, "User Found", Toast.LENGTH_SHORT).show()
+                                                Log.d("matched number", num)
+                                                matchedNumber = num
+                                            }
+                                        }
+
+                                        if (matchedNumber == user.phoneNumber) {
+                                            Log.d("user.userName", user.key)
+                                            bindingDialog.recyclerViewFoundUSer.apply {
+                                                layoutManager = LinearLayoutManager(dialog.context, LinearLayoutManager.VERTICAL,false)
+                                                adapter = FoundUserAdapter(dialog.context, user,
+                                                        object : FoundUserAdapter.OnClick {
+                                                            override fun clickListener(key: String) {
+                                                                FirebaseDatabase.getInstance().getReference("Users/$userID")
+                                                                    .child("Friend List")
+                                                                    .push()
+                                                                    .setValue(key)
+                                                                dialog.dismiss()
+                                                            }
+                                                        })
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                Log.d("Failed to find user", error.message)
+                            }
+                        })
+                }
+
+            }
+
             R.id.menu_profile -> {
                 startActivity(Intent(this, ProfileActivity::class.java))
             }
 
             R.id.menu_signOut -> {
-                val bindDialog :LayoutDialogBinding = LayoutDialogBinding.inflate(LayoutInflater.from(this))
+                val bindDialog: LayoutDialogBinding =
+                    LayoutDialogBinding.inflate(LayoutInflater.from(this))
 
                 val dialog = Dialog(this)
                 dialog.setContentView(bindDialog.root)
@@ -115,6 +198,11 @@ class MainActivity : AppCompatActivity() {
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
         finish()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        chatData.clear()
     }
 
 }
