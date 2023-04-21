@@ -30,7 +30,7 @@ import java.io.File
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
-    lateinit var userID: String
+    private lateinit var userID: String
     private lateinit var progress: SpotsDialog
     private lateinit var photo: Bitmap
     private lateinit var byteArray: ByteArray
@@ -71,6 +71,12 @@ class ProfileActivity : AppCompatActivity() {
                 //  fetching user's name and phone-number from firebase-realtime-database
                 val userProfile = snapshot.getValue(SignInDataClass::class.java)
                 binding.userTxtName.text = userProfile!!.userName
+                if (userProfile.about == "") {
+                    binding.userTxtAbout.text = getString(R.string.default_about)
+                }
+                else {
+                    binding.userTxtAbout.text = userProfile.about
+                }
                 binding.userTxtPhone.text = userProfile.phoneNumber
             }
 

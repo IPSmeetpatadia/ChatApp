@@ -21,6 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:singleLine="true"
         app:layout_constraintTop_toBottomOf="@id/txtEnterName"
         app:layout_constraintStart_toStartOf="parent"/>
 

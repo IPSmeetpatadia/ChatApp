@@ -106,7 +106,6 @@ class CreateProfileActivity : AppCompatActivity() {
             child("phoneNumber").setValue(binding.profileEdtxtContact.text.toString())
         }
         uploadImage()
-        updateUI()
     }
 
     private fun selectImage() {
@@ -130,6 +129,7 @@ class CreateProfileActivity : AppCompatActivity() {
         storageReference.putFile(imgURI!!)
             .addOnSuccessListener {
                 progress.dismiss()
+                updateUI()
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Fail", Toast.LENGTH_SHORT).show()
@@ -138,8 +138,8 @@ class CreateProfileActivity : AppCompatActivity() {
 
     private fun addUser() {
         val addUser = SignInDataClass(
-            binding.profileEdtxtName.text.toString(),
-            binding.profileEdtxtContact.text.toString()
+            userName = binding.profileEdtxtName.text.toString(),
+            phoneNumber = binding.profileEdtxtContact.text.toString()
         )
 
         val userID = FirebaseAuth.getInstance().currentUser!!.uid
