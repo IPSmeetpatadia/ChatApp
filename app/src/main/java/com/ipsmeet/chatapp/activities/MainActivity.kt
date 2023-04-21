@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
                     for (item in snapshot.children) {
                         Log.d("item", item.value.toString())
 
-                        FirebaseDatabase.getInstance().getReference("Users")
+                        FirebaseDatabase.getInstance().getReference("Users").orderByChild("userName")
                             .addValueEventListener(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     if (snapshot.exists()) {
@@ -120,6 +120,7 @@ class MainActivity : AppCompatActivity() {
                     FirebaseDatabase.getInstance().getReference("Users")
                         .addValueEventListener(object : ValueEventListener {
                             override fun onDataChange(snapshot: DataSnapshot) {
+                                chatData.clear()
                                 if (snapshot.exists()) {
                                     for (i in snapshot.children) {
                                         val user = i.getValue(UserDataClass::class.java)
@@ -187,6 +188,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
         return super.onOptionsItemSelected(item)
     }
 
