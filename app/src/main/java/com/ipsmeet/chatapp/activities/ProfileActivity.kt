@@ -62,7 +62,7 @@ class ProfileActivity : AppCompatActivity() {
                     .getReference("Images/*${snapshot.key}").getFile(localFile)
                     .addOnSuccessListener {
                         val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
-                        Glide.with(this@ProfileActivity).load(bitmap).into(binding.userProfileImg)
+                        Glide.with(applicationContext).load(bitmap).into(binding.userProfileImg)
                     }
                     .addOnFailureListener {
                         Log.d("Fail to load user profiles", it.message.toString())

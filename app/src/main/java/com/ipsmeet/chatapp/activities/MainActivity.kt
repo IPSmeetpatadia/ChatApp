@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.adapters.ChatAdapter
 import com.ipsmeet.chatapp.adapters.FoundUserAdapter
@@ -46,6 +47,15 @@ class MainActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         userID = auth.currentUser!!.uid
 
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener {
+                val userToken = HashMap<String, Any>()
+                userToken.put("token", it.toString())
+
+                FirebaseDatabase.getInstance().getReference("Users/$userID")
+                    .updateChildren(userToken)
+            }
+
         //  DISPLAYING FRIENDS AS CHAT
         databaseReference = FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
         databaseReference.addValueEventListener(object : ValueEventListener {
@@ -70,10 +80,11 @@ class MainActivity : AppCompatActivity() {
                                                     layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL,false)
                                                     adapter = ChatAdapter(this@MainActivity, chatData,
                                                             object : ChatAdapter.OnClick {
-                                                                override fun openChat(key: String) {    //  open chat
+                                                                override fun openChat(key: String, token: String) {    //  open chat
                                                                     startActivity(
                                                                         Intent(this@MainActivity, ChatActivity::class.java)
                                                                             .putExtra("userID", key)
+                                                                            .putExtra("token", token)
                                                                     )
                                                                 }
                                                             })

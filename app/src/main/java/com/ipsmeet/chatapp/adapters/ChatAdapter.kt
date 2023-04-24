@@ -50,13 +50,13 @@ class ChatAdapter(private val context: Context, private val chatList: List<UserD
 
             //  ITEM-CLICK LISTENER
             itemView.setOnClickListener {
-                listener.openChat(chatList[position].key)
+                listener.openChat(chatList[position].key, chatList[position].token)
             }
         }
     }
 
     interface OnClick {
-        fun openChat(key: String)   //  passing user's ID, on ItemClickListener
+        fun openChat(key: String, token: String)   //  passing user's ID, on ItemClickListener
     }
 
 }

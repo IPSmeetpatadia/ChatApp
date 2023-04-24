@@ -6,9 +6,14 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.bumptech.glide.Glide
+import com.google.android.gms.common.api.Response
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
@@ -16,6 +21,7 @@ import com.ipsmeet.chatapp.adapters.MessagesAdapter
 import com.ipsmeet.chatapp.databinding.ActivityChatBinding
 import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
+import org.json.JSONObject
 import java.io.File
 import java.util.Date
 
@@ -30,6 +36,9 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var receiverRoom: String
     var chats = arrayListOf<MessagesDataClass>()
     lateinit var messagesAdapter: MessagesAdapter
+    lateinit var name: String
+    lateinit var message: String
+    lateinit var receiverToken: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +50,7 @@ class ChatActivity : AppCompatActivity() {
 
         val senderID = FirebaseAuth.getInstance().currentUser!!.uid   // ID of logged-in user
         val receiverID = intent.getStringExtra("userID")   // ID of other person
+        receiverToken = intent.getStringExtra("token").toString()   // token of other person
 
         //  CREATING ROOM, FOR CHAT, TO STORE DATA USER-VISE
         senderRoom = senderID + receiverID
@@ -67,6 +77,7 @@ class ChatActivity : AppCompatActivity() {
                     val data = snapshot.getValue(UserDataClass::class.java)
                     data!!.key = snapshot.key.toString()
                     binding.commsName.text = data.userName
+                    name = data.userName
 
                     //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
                     val localFile = File.createTempFile("tempfile", "jpeg")
@@ -96,6 +107,7 @@ class ChatActivity : AppCompatActivity() {
                     for (msgs in snapshot.children) {
                         val comms = msgs.getValue(MessagesDataClass::class.java)
                         chats.add(comms!!)
+                        message = comms.message
                     }
                     messagesAdapter.notifyDataSetChanged()
                 }
@@ -128,6 +140,9 @@ class ChatActivity : AppCompatActivity() {
                         .child("Messages")
                         .push()
                         .setValue(msg)
+                        .addOnSuccessListener {
+                            sendNotification(name, message, receiverToken)
+                        }
                 }
             binding.commsTypeMsg.setText("")
         }
@@ -162,6 +177,54 @@ class ChatActivity : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         updateUI()
+    }
+
+    private fun sendNotification(name: String, message: String, token: String) {
+        val requestQueue = Volley.newRequestQueue(this)
+
+        val url = "https://fcm.googleapis.com/fcm/send"
+
+        val jsonObject = JSONObject()
+        jsonObject.put("title", name)
+        jsonObject.put("body", message)
+
+        Log.d("name", name)
+        Log.d("body", message)
+        Log.d("jsonObject", jsonObject.toString())
+
+        val notificationData = JSONObject()
+        notificationData.put("notificationData", jsonObject)
+        notificationData.put("to", token)   //  `here `token` is the token of other person
+
+        Log.d("notificationData", notificationData.toString())
+        Log.d("to", token)
+
+        val jsonObjectRequest = object : JsonObjectRequest(url, notificationData,
+            object : com.android.volley.Response.Listener<JSONObject?> {
+                override fun onResponse(response: JSONObject?) {
+                    Log.d("onResponse", response.toString())
+                }
+            },
+            object : com.android.volley.Response.ErrorListener {
+                override fun onErrorResponse(error: VolleyError?) {
+                    Log.d( "jsonObjectRequest Error", error!!.message.toString())
+                }
+            }) {
+
+            override fun getHeaders(): MutableMap<String, String> {
+                val map = HashMap<String, String>()
+                map["Authorization"] = "key=AAAAicac9VA:APA91bGFvmRwEgcFKy6jEgdvldoy8JWhWiX2SEPCG-jsSG805wfhcUqgwJAQxT4KR8nz7aAMomB00cUnwDevNTjBZ3OR4D6u1hjs3Jcw-Bhp5ghZuTUaFgirQE5uv3AwDR5606yUBJu6"
+                map["Content-Type"] = "application/json"
+
+                Log.d("map", map.toString())
+
+                return map
+            }
+        }
+
+        Log.d("jsonObjectRequest", jsonObjectRequest.toString())
+
+        requestQueue.add(jsonObjectRequest)
     }
 
 }
