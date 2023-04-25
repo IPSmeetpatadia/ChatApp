@@ -3,9 +3,12 @@ package com.ipsmeet.chatapp.activities
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -30,7 +33,9 @@ import com.ipsmeet.chatapp.databinding.ActivityChatBinding
 import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.Calendar
 import java.util.Date
 
 class ChatActivity : AppCompatActivity() {
@@ -44,6 +49,8 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var receiverRoom: String
     var chats = arrayListOf<MessagesDataClass>()
     lateinit var messagesAdapter: MessagesAdapter
+    private lateinit var photo: Bitmap
+
     lateinit var name: String
     lateinit var message: String
     private lateinit var receiverToken: String
@@ -152,6 +159,50 @@ class ChatActivity : AppCompatActivity() {
             binding.commsTypeMsg.setText("")
         }
 
+        binding.sendCam.setOnClickListener {
+            openCamera()
+        }
+
+        binding.commsProfile.setOnClickListener {
+
+        }
+
+    }
+
+    private fun openCamera() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            .putExtra(MediaStore.EXTRA_OUTPUT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
+
+        if (cameraIntent.resolveActivity(this.packageManager) != null) {
+            startActivityForResult(cameraIntent, 1888)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 1888 && resultCode == RESULT_OK) {
+            if (data!!.data != null) {
+                val selectedImg = data.data
+
+                FirebaseStorage.getInstance().getReference("Chat Media/${ Calendar.getInstance().time }").putFile(selectedImg!!)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            FirebaseStorage.getInstance().getReference("Chat Media/${ Calendar.getInstance().time }").downloadUrl
+                                .addOnSuccessListener { uri ->
+                                    val filePath = uri.toString()
+                                    Log.d("filePath", filePath)
+                                }
+                                .addOnFailureListener {
+                                    Log.d("fail filePath", it.message.toString())
+                                }
+                        }
+                    }
+                    .addOnFailureListener {
+                        Log.d("fail task", it.message.toString())
+                    }
+            }
+        }
     }
 
     private var messageSend: TextWatcher = object : TextWatcher {
@@ -167,7 +218,6 @@ class ChatActivity : AppCompatActivity() {
             binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.isNotEmpty()
         }
     }
-
 
     private fun updateUI() {
         startActivity(
