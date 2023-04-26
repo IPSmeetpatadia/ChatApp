@@ -69,7 +69,7 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
         show the notification
     */
     override fun onMessageReceived(message: RemoteMessage) {
-        Log.e("TAG", "onMessageReceived: Data Received...", )
+        Log.e("TAG", "onMessageReceived: Data Received...")
         generateNotification(message.notification!!.title!!, message.notification!!.body!!)
 
     }

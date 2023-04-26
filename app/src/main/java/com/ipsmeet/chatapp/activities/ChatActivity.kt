@@ -1,7 +1,6 @@
 package com.ipsmeet.chatapp.activities
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.provider.MediaStore
@@ -120,6 +119,7 @@ class ChatActivity : AppCompatActivity() {
             }
         })
 
+        //  FETCHING LOGGED-IN USER'S NAME
         FirebaseDatabase.getInstance().getReference("Users/$senderID")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -128,7 +128,7 @@ class ChatActivity : AppCompatActivity() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-
+                    Log.d("Failed to fetch logged-in user's name", error.message)
                 }
             })
 
@@ -136,6 +136,7 @@ class ChatActivity : AppCompatActivity() {
 
         binding.btnSendMsg.setOnClickListener {
             chats.clear()
+
             val msg = MessagesDataClass(
                 message = binding.commsTypeMsg.text.toString(),
                 senderID = senderID,
@@ -155,9 +156,10 @@ class ChatActivity : AppCompatActivity() {
                         .push()
                         .setValue(msg)
                         .addOnSuccessListener {
-                            sendNotification(name, message, receiverToken)
+                            sendNotification(name, message, receiverToken)  // passing required parameters to send notification
                         }
                 }
+
             binding.commsTypeMsg.setText("")
         }
 
@@ -207,16 +209,21 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    //  TEXT-WATCHER FOR SEND BUTTON, SO USER CANNOT TRIGGER BUTTON EVENT WITHOUT EMPTY EDIT_TEXTVIEW
     private var messageSend: TextWatcher = object : TextWatcher {
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            // default Button should be disable (before entering text/message in EditTextView)
             binding.btnSendMsg.isEnabled = false
         }
 
         override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            // when we give some text to EditTextView, Button should be enabled
             binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.isNotEmpty()
         }
 
         override fun afterTextChanged(s: Editable?) {
+            // if user make some changes in enterd text/message
+            // if user clear EditTextView, then Button will be disable
             binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.isNotEmpty()
         }
     }
@@ -237,48 +244,41 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun sendNotification(name: String, message: String, token: String) {
-        val requestQueue = Volley.newRequestQueue(this)
+        val requestQueue = Volley.newRequestQueue(this)     // using Volley
 
         val url = "https://fcm.googleapis.com/fcm/send"
 
+        /*  BODY/RAW DATA FORMAT THAT WE NEED
+        {
+            "to" : "dJqvGFCbSsq7EPPnJKBJ8D:APA91bELNZ75QamVQVXCcarFlGgkFZQ0zk3SGw7pT_y6mvyyfybaQkaDb-qHYKlVzGKU2w_37e9qVfQ4iSl2TaN0hiENpJBy7rtuL0tSScu-ktAtPQKKmPDlPjexo0epaWU47880hc5R",
+            "collapse_key" : "type_a",
+            "notification" : {
+                "title": "Sender Name",
+                "body" : "Received message"
+            },
+            "data" : {
+                "title": "Title of Your Notification in Title",
+                "body" : "Click here"
+            }
+        }
+        */
         val jsonObject = JSONObject()
         jsonObject.put("title", name)
         jsonObject.put("body", message)
 
         val data = JSONObject()
-        jsonObject.put("title", name)
-        jsonObject.put("body", message)
+        data.put("title", "Title of Your Notification in Title")
+        data.put("body", "Click here")
 
-        Log.d("data", data.toString())
-/*
-    {
-        "to" : "dJqvGFCbSsq7EPPnJKBJ8D:APA91bELNZ75QamVQVXCcarFlGgkFZQ0zk3SGw7pT_y6mvyyfybaQkaDb-qHYKlVzGKU2w_37e9qVfQ4iSl2TaN0hiENpJBy7rtuL0tSScu-ktAtPQKKmPDlPjexo0epaWU47880hc5R",
-        "collapse_key" : "type_a",
-        "notification" : {
-            "title": "Sender Name",
-            "body" : "You have received notification"
-        },
-        "data" : {
-            "body" : "Click here",
-            "title": "Title of Your Notification in Title"
-        }
-    }
-*/
-
-        Log.d("name", name)
-        Log.d("body", message)
-        Log.d("jsonObject", jsonObject.toString())
-
+        //  combining all the data into one as notificationData
         val notificationData = JSONObject()
         notificationData.put("to", token)   //  `here `token` is the token of other person
         notificationData.put("collapse_key", "type_a")
-        notificationData.put("notification", jsonObject)
+        notificationData.put("notification", jsonObject)    //  notification data
         notificationData.put("data", data)
 
-        Log.d("notificationData", notificationData.toString())
-        Log.d("to", token)
-
-        val jsonObjectRequest = object : JsonObjectRequest(url, notificationData,
+        //  adding Header in request
+        val jsonObjectRequest = object : JsonObjectRequest(Method.POST, url, notificationData,
             object : Response.Listener<JSONObject?> {
                 override fun onResponse(response: JSONObject?) {
                     Log.d("onResponse", response.toString())
@@ -292,17 +292,11 @@ class ChatActivity : AppCompatActivity() {
 
             override fun getHeaders(): MutableMap<String, String> {
                 val map = HashMap<String, String>()
-                map["Authorization"] = "key=AAAAicac9VA:APA91bGFvmRwEgcFKy6jEgdvldoy8JWhWiX2SEPCG-jsSG805wfhcUqgwJAQxT4KR8nz7aAMomB00cUnwDevNTjBZ3OR4D6u1hjs3Jcw-Bhp5ghZuTUaFgirQE5uv3AwDR5606yUBJu6"
+                map["Authorization"] = "key=AAAAicac9VA:APA91bGFvmRwEgcFKy6jEgdvldoy8JWhWiX2SEPCG-jsSG805wfhcUqgwJAQxT4KR8nz7aAMomB00cUnwDevNTjBZ3OR4D6u1hjs3Jcw-Bhp5ghZuTUaFgirQE5uv3AwDR5606yUBJu6"   // server key
                 map["Content-Type"] = "application/json"
-
-                Log.d("map", map.toString())
-
                 return map
             }
         }
-
-        Log.d("jsonObjectRequest", jsonObjectRequest.toString())
-
         requestQueue.add(jsonObjectRequest)
     }
 

@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         FirebaseMessaging.getInstance().token
             .addOnSuccessListener {
                 val userToken = HashMap<String, Any>()
-                userToken.put("token", it.toString())
+                userToken["token"] = it.toString()  // userToken.put("token", it.toString())
 
                 FirebaseDatabase.getInstance().getReference("Users/$userID")
                     .updateChildren(userToken)
