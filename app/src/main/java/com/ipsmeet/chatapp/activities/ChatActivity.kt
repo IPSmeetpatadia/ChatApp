@@ -1,39 +1,28 @@
 package com.ipsmeet.chatapp.activities
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.bumptech.glide.Glide
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import com.ipsmeet.chatapp.adapters.MessagesAdapter
 import com.ipsmeet.chatapp.databinding.ActivityChatBinding
 import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Calendar
 import java.util.Date
@@ -49,7 +38,6 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var receiverRoom: String
     var chats = arrayListOf<MessagesDataClass>()
     lateinit var messagesAdapter: MessagesAdapter
-    private lateinit var photo: Bitmap
 
     lateinit var name: String
     lateinit var message: String
@@ -92,7 +80,6 @@ class ChatActivity : AppCompatActivity() {
                     val data = snapshot.getValue(UserDataClass::class.java)
                     data!!.key = snapshot.key.toString()
                     binding.commsName.text = data.userName
-                    name = data.userName
 
                     //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
                     val localFile = File.createTempFile("tempfile", "jpeg")
@@ -133,6 +120,18 @@ class ChatActivity : AppCompatActivity() {
             }
         })
 
+        FirebaseDatabase.getInstance().getReference("Users/$senderID")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val u = snapshot.getValue(UserDataClass::class.java)
+                    name = u!!.userName
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
+
         binding.commsTypeMsg.addTextChangedListener(messageSend)
 
         binding.btnSendMsg.setOnClickListener {
@@ -155,6 +154,9 @@ class ChatActivity : AppCompatActivity() {
                         .child("Messages")
                         .push()
                         .setValue(msg)
+                        .addOnSuccessListener {
+                            sendNotification(name, message, receiverToken)
+                        }
                 }
             binding.commsTypeMsg.setText("")
         }
@@ -232,6 +234,76 @@ class ChatActivity : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         updateUI()
+    }
+
+    private fun sendNotification(name: String, message: String, token: String) {
+        val requestQueue = Volley.newRequestQueue(this)
+
+        val url = "https://fcm.googleapis.com/fcm/send"
+
+        val jsonObject = JSONObject()
+        jsonObject.put("title", name)
+        jsonObject.put("body", message)
+
+        val data = JSONObject()
+        jsonObject.put("title", name)
+        jsonObject.put("body", message)
+
+        Log.d("data", data.toString())
+/*
+    {
+        "to" : "dJqvGFCbSsq7EPPnJKBJ8D:APA91bELNZ75QamVQVXCcarFlGgkFZQ0zk3SGw7pT_y6mvyyfybaQkaDb-qHYKlVzGKU2w_37e9qVfQ4iSl2TaN0hiENpJBy7rtuL0tSScu-ktAtPQKKmPDlPjexo0epaWU47880hc5R",
+        "collapse_key" : "type_a",
+        "notification" : {
+            "title": "Sender Name",
+            "body" : "You have received notification"
+        },
+        "data" : {
+            "body" : "Click here",
+            "title": "Title of Your Notification in Title"
+        }
+    }
+*/
+
+        Log.d("name", name)
+        Log.d("body", message)
+        Log.d("jsonObject", jsonObject.toString())
+
+        val notificationData = JSONObject()
+        notificationData.put("to", token)   //  `here `token` is the token of other person
+        notificationData.put("collapse_key", "type_a")
+        notificationData.put("notification", jsonObject)
+        notificationData.put("data", data)
+
+        Log.d("notificationData", notificationData.toString())
+        Log.d("to", token)
+
+        val jsonObjectRequest = object : JsonObjectRequest(url, notificationData,
+            object : Response.Listener<JSONObject?> {
+                override fun onResponse(response: JSONObject?) {
+                    Log.d("onResponse", response.toString())
+                }
+            },
+            object : Response.ErrorListener {
+                override fun onErrorResponse(error: VolleyError?) {
+                    Log.d( "jsonObjectRequest Error", error!!.message.toString())
+                }
+            }) {
+
+            override fun getHeaders(): MutableMap<String, String> {
+                val map = HashMap<String, String>()
+                map["Authorization"] = "key=AAAAicac9VA:APA91bGFvmRwEgcFKy6jEgdvldoy8JWhWiX2SEPCG-jsSG805wfhcUqgwJAQxT4KR8nz7aAMomB00cUnwDevNTjBZ3OR4D6u1hjs3Jcw-Bhp5ghZuTUaFgirQE5uv3AwDR5606yUBJu6"
+                map["Content-Type"] = "application/json"
+
+                Log.d("map", map.toString())
+
+                return map
+            }
+        }
+
+        Log.d("jsonObjectRequest", jsonObjectRequest.toString())
+
+        requestQueue.add(jsonObjectRequest)
     }
 
 }
