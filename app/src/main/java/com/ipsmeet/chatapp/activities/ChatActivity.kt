@@ -80,6 +80,9 @@ class ChatActivity : AppCompatActivity() {
                     data!!.key = snapshot.key.toString()
                     binding.commsName.text = data.userName
 
+                    Log.d("key", data.key)
+                    Log.d("token", data.token)
+
                     //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
                     val localFile = File.createTempFile("tempfile", "jpeg")
                     FirebaseStorage.getInstance()
@@ -110,6 +113,8 @@ class ChatActivity : AppCompatActivity() {
                         chats.add(comms!!)
                         message = comms.message
                     }
+                    val position = binding.commsRecyclerView.adapter?.itemCount
+                    binding.commsRecyclerView.smoothScrollToPosition(position!!)
                     messagesAdapter.notifyDataSetChanged()
                 }
             }
@@ -138,7 +143,7 @@ class ChatActivity : AppCompatActivity() {
             chats.clear()
 
             val msg = MessagesDataClass(
-                message = binding.commsTypeMsg.text.toString(),
+                message = binding.commsTypeMsg.text.toString().trim(),
                 senderID = senderID,
                 timeStamp = Date().time.toFloat()
             )
@@ -217,14 +222,14 @@ class ChatActivity : AppCompatActivity() {
         }
 
         override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            // when we give some text to EditTextView, Button should be enabled
-            binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.isNotEmpty()
+            // when we give some text/message (only whitespace is not included) to EditTextView, Button should be enabled
+            binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.trim().isNotEmpty()
         }
 
         override fun afterTextChanged(s: Editable?) {
-            // if user make some changes in enterd text/message
+            // if user make some changes in entered text/message (only whitespace is not included)
             // if user clear EditTextView, then Button will be disable
-            binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.isNotEmpty()
+            binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.trim().isNotEmpty()
         }
     }
 

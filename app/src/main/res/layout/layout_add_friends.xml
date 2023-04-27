@@ -2,33 +2,33 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="300dp"
+    android:layout_width="@dimen/_250sdp"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
     android:background="@drawable/shape_dialog"
-    android:padding="10dp">
+    android:padding="@dimen/_6sdp">
 
     <TextView
         android:id="@+id/txtAddFriend"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:padding="@dimen/_6sdp"
         android:text="Search Friend"
         android:textColor="@color/aquamarine6"
-        android:textSize="16sp"
+        android:textSize="@dimen/_12ssp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/addFriend_TIL"
-        android:layout_width="275dp"
+        android:layout_width="@dimen/_220sdp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/_6sdp"
         android:textColorHint="@color/aquamarine6"
         app:boxBackgroundColor="@color/blur1_aquamarine1"
-        app:boxCornerRadiusTopEnd="15dp"
-        app:boxCornerRadiusTopStart="15dp"
+        app:boxCornerRadiusTopEnd="@dimen/_11sdp"
+        app:boxCornerRadiusTopStart="@dimen/_11sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/txtAddFriend"
@@ -42,40 +42,40 @@
             android:hint="Enter phone number"
             android:inputType="phone"
             android:singleLine="true" />
+
     </com.google.android.material.textfield.TextInputLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/_6sdp"
         android:background="@drawable/shape_txtv_dialog"
         android:backgroundTint="@color/aquamarine4"
-        android:padding="10dp"
+        android:padding="@dimen/_6sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/addFriend_TIL">
 
         <ImageView
             android:id="@+id/imgV_searchPerson"
-            android:layout_width="23dp"
-            android:layout_height="23dp"
+            android:layout_width="@dimen/_20sdp"
+            android:layout_height="@dimen/_20sdp"
             android:src="@drawable/baseline_person_search_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/txtSearch"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
-            tools:layout_editor_absoluteX="10dp" />
+            app:tint="@color/white" />
 
         <TextView
             android:id="@+id/txtSearch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
+            android:layout_marginStart="@dimen/_3sdp"
             android:text="Search"
             android:textColor="@color/white"
-            android:textSize="15sp"
+            android:textSize="@dimen/_12ssp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -88,7 +88,7 @@
         android:id="@+id/recyclerView_foundUSer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="@dimen/_16sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout_search" />

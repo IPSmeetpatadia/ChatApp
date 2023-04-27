@@ -4,12 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
-    android:padding="10dp">
+    android:padding="@dimen/_6sdp">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/chat_imgView"
-        android:layout_width="55dp"
-        android:layout_height="55dp"
+        android:layout_width="@dimen/_50sdp"
+        android:layout_height="@dimen/_50sdp"
         tools:src="@drawable/user_default_img"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
@@ -19,11 +19,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:text="Manan Suthar"
-        android:textSize="16sp"
+        android:textSize="@dimen/_12ssp"
         android:textStyle="bold"
         android:textColor="@color/black"
         android:layout_marginStart="15dp"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/chat_lastMessage"
         app:layout_constraintStart_toEndOf="@id/chat_imgView"/>
 
     <TextView
@@ -31,7 +32,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:text="abcd"
-        android:layout_marginStart="15dp"
+        android:layout_marginStart="@dimen/_11sdp"
+        app:layout_constraintTop_toBottomOf="@id/chat_personName"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/chat_imgView"/>
 

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="250dp"
+    android:layout_width="@dimen/_200sdp"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="5dp">
+    android:padding="@dimen/_3sdp">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/imgV_foundProfile"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="@dimen/_32sdp"
+        android:layout_height="@dimen/_32sdp"
         android:src="@drawable/user_default_img"
         app:layout_constraintTop_toTopOf="@id/txt_foundUser"
         app:layout_constraintBottom_toBottomOf="@id/txt_found_number"
@@ -22,9 +22,9 @@
         android:layout_height="wrap_content"
         tools:text="Meet Patadia"
         android:textColor="@color/black"
-        android:textSize="16sp"
+        android:textSize="@dimen/_12ssp"
         android:textStyle="bold"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="@dimen/_6sdp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/imgV_foundProfile"
         app:layout_constraintBottom_toTopOf="@id/txt_found_number"/>
@@ -33,17 +33,17 @@
         android:id="@+id/txt_found_number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="+918734963629"
-        android:layout_marginTop="5dp"
-        android:layout_marginStart="10dp"
+        tools:text="+91 8734963629"
+        android:layout_marginTop="@dimen/_3sdp"
+        android:layout_marginStart="@dimen/_6sdp"
         app:layout_constraintTop_toBottomOf="@id/txt_foundUser"
         app:layout_constraintStart_toEndOf="@id/imgV_foundProfile"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
     <ImageView
         android:id="@+id/add_found_user"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
+        android:layout_width="@dimen/_21sdp"
+        android:layout_height="@dimen/_21sdp"
         android:src="@drawable/baseline_person_add_24"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/txt_foundUser"

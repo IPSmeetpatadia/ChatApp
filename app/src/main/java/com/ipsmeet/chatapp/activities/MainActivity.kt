@@ -2,6 +2,7 @@ package com.ipsmeet.chatapp.activities
 
 import android.app.Dialog
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
@@ -13,18 +14,22 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.storage.FirebaseStorage
 import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.adapters.ChatAdapter
 import com.ipsmeet.chatapp.adapters.FoundUserAdapter
 import com.ipsmeet.chatapp.databinding.ActivityMainBinding
 import com.ipsmeet.chatapp.databinding.LayoutAddFriendsBinding
 import com.ipsmeet.chatapp.databinding.LayoutDialogBinding
+import com.ipsmeet.chatapp.databinding.PopupViewProfileBinding
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -80,12 +85,75 @@ class MainActivity : AppCompatActivity() {
                                                     layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL,false)
                                                     adapter = ChatAdapter(this@MainActivity, chatData,
                                                             object : ChatAdapter.OnClick {
-                                                                override fun openChat(key: String, token: String) {    //  open chat
+                                                                //  open chat
+                                                                override fun openChat(key: String, token: String) {
                                                                     startActivity(
                                                                         Intent(this@MainActivity, ChatActivity::class.java)
                                                                             .putExtra("userID", key)
                                                                             .putExtra("token", token)
                                                                     )
+                                                                }
+
+                                                                //  open dialog-box to show profile image
+                                                                override fun viewProfilePopup(key: String, token: String) {
+                                                                    Log.d("key", key)
+                                                                    Log.d("token", token)
+
+                                                                    val bindDialog: PopupViewProfileBinding = PopupViewProfileBinding.inflate(LayoutInflater.from(this@MainActivity))
+
+                                                                    val dialog = Dialog(this@MainActivity)
+                                                                    dialog.setContentView(bindDialog.root)
+                                                                    dialog.show()
+
+                                                                    FirebaseDatabase.getInstance().getReference("Users/$key")
+                                                                        .addValueEventListener(object : ValueEventListener {
+                                                                            override fun onDataChange(snapshot: DataSnapshot) {
+                                                                                if (snapshot.exists()) {
+
+                                                                                    Log.d("snapshot", snapshot.toString())
+
+                                                                                    val data = snapshot.getValue(UserDataClass::class.java)
+                                                                                    data!!.key = snapshot.key.toString()
+                                                                                    bindDialog.popupViewName.text = data.userName
+                                                                                    Log.d("data.userName", data.userName)
+
+                                                                                    //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
+                                                                                    val localFile = File.createTempFile("tempfile", "jpeg")
+                                                                                    FirebaseStorage.getInstance()
+                                                                                        .getReference("Images/*${key}")
+                                                                                        .getFile(localFile)
+                                                                                        .addOnSuccessListener {
+                                                                                            val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
+                                                                                            Glide.with(applicationContext).load(bitmap).into(bindDialog.popupViewProfile)
+                                                                                        }
+                                                                                        .addOnFailureListener {
+                                                                                            Log.d("Fail to load user profiles", it.message.toString())
+                                                                                        }
+                                                                                }
+                                                                            }
+
+                                                                            override fun onCancelled(error: DatabaseError) {
+                                                                                Log.d("popup failed", error.message)
+                                                                            }
+                                                                        })
+
+                                                                    bindDialog.popupSendMsg.setOnClickListener {
+                                                                        startActivity(
+                                                                            Intent(this@MainActivity, ChatActivity::class.java)
+                                                                                .putExtra("userID", key)
+                                                                                .putExtra("token", token)
+                                                                        )
+                                                                        dialog.dismiss()
+                                                                    }
+
+                                                                    bindDialog.popupInfo.setOnClickListener {
+                                                                        startActivity(
+                                                                            Intent(this@MainActivity, ViewProfileActivity::class.java)
+                                                                                .putExtra("userID", key)
+                                                                                .putExtra("token", token)
+                                                                        )
+                                                                        dialog.dismiss()
+                                                                    }
                                                                 }
                                                             })
                                                     addItemDecoration(DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL))

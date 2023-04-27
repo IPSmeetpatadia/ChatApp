@@ -17,9 +17,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:layout_editor_absoluteX="16dp"
-            tools:layout_editor_absoluteY="16dp">
+            android:layout_height="match_parent">
 
             <ImageView
                 android:id="@+id/comms_back"
@@ -33,9 +31,9 @@
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/comms_profile"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="3dp"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
+                android:layout_marginStart="@dimen/_3sdp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/comms_back"
                 app:layout_constraintTop_toTopOf="parent"
@@ -46,9 +44,9 @@
                 android:id="@+id/comms_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/_10sdp"
                 android:textColor="@color/white"
-                android:textSize="20sp"
+                android:textSize="@dimen/_16ssp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/comms_profile"
@@ -63,7 +61,7 @@
         android:id="@+id/comms_recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:padding="5dp"
+        android:padding="@dimen/_3sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/comms_toolbar"
@@ -73,7 +71,7 @@
         android:id="@+id/layoutMsg"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
+        android:layout_margin="@dimen/_5sdp"
         android:background="@drawable/shape_edit_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btn_sendMsg"
@@ -86,8 +84,8 @@
             android:layout_height="wrap_content"
             android:background="@null"
             android:hint="Message"
-            android:layout_marginEnd="7dp"
-            android:padding="16dp"
+            android:layout_marginEnd="@dimen/_7sdp"
+            android:padding="@dimen/_12sdp"
             app:layout_constraintEnd_toStartOf="@id/sendAttach"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -98,7 +96,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/outline_camera_alt_24"
-            android:layout_marginEnd="7dp"
+            android:layout_marginEnd="@dimen/_5sdp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -110,7 +108,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/baseline_attach_file_24"
             android:rotation="40"
-            android:layout_marginEnd="9dp"
+            android:layout_marginEnd="@dimen/_7sdp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/sendCam"
             app:layout_constraintTop_toTopOf="parent"
@@ -124,7 +122,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/baseline_send_24"
         app:tint="@color/white"
-        android:layout_margin="5dp"
+        android:layout_margin="@dimen/_5sdp"
         android:enabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

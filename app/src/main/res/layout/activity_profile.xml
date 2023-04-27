@@ -18,9 +18,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:layout_editor_absoluteX="16dp"
-            tools:layout_editor_absoluteY="16dp">
+            android:layout_height="match_parent">
 
             <ImageView
                 android:id="@+id/user_back"
@@ -35,9 +33,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/_6sdp"
                 android:textColor="@color/white"
-                android:textSize="20sp"
+                android:textSize="@dimen/_16ssp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/user_back"
@@ -59,21 +57,20 @@
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/user_profileImg"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
+            android:layout_width="@dimen/_115sdp"
+            android:layout_height="@dimen/_115sdp"
             android:src="@drawable/user_default_img"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="@dimen/_20sdp"
             android:layout_gravity="bottom|center_horizontal"/>
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/user_editImg"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/_32sdp"
+            android:layout_height="@dimen/_32sdp"
             android:src="@drawable/baseline_camera_alt_24"
-            android:layout_marginTop="30dp"
-            android:padding="10dp"
+            android:padding="@dimen/_6sdp"
             android:background="@drawable/shape_circle"
-            android:elevation="3dp"
+            android:elevation="@dimen/_2sdp"
             android:layout_gravity="bottom|end"/>
 
     </FrameLayout>
@@ -83,14 +80,14 @@
         android:id="@+id/user_layoutName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:layout_marginTop="20dp"
+        android:padding="@dimen/_7sdp"
+        android:layout_marginTop="@dimen/_16sdp"
         app:layout_constraintTop_toBottomOf="@id/user_frameLayout">
 
         <ImageView
             android:id="@+id/imgPerson"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="@dimen/_21sdp"
+            android:layout_height="@dimen/_21sdp"
             android:src="@drawable/baseline_person_24"
             app:tint="@color/aquamarine4"
             app:layout_constraintStart_toStartOf="parent"
@@ -102,8 +99,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Name"
-            android:textSize="16sp"
-            android:layout_marginStart="15dp"
+            android:textSize="@dimen/_12ssp"
+            android:layout_marginStart="@dimen/_11sdp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/imgPerson"/>
 
@@ -112,17 +109,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="Meet Patadia"
-            android:layout_marginTop="4dp"
-            android:textSize="18sp"
+            android:layout_marginTop="@dimen/_3sdp"
+            android:textSize="@dimen/_15ssp"
             android:textColor="@color/black"
-            android:layout_marginStart="15dp"
+            android:layout_marginStart="@dimen/_11sdp"
             app:layout_constraintTop_toBottomOf="@id/txtName"
             app:layout_constraintStart_toEndOf="@id/imgPerson"/>
 
         <ImageView
             android:id="@+id/user_editName"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="@dimen/_21sdp"
+            android:layout_height="@dimen/_21sdp"
             android:src="@drawable/baseline_mode_edit_24"
             app:tint="@color/aquamarine3"
             app:layout_constraintEnd_toEndOf="parent"
@@ -134,10 +131,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="This is not your username or pin. This is name will be visible to other"
-            android:textSize="14sp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="5dp"
-            android:layout_marginTop="8dp"
+            android:textSize="@dimen/_11ssp"
+            android:layout_marginStart="@dimen/_11sdp"
+            android:layout_marginEnd="@dimen/_2sdp"
+            android:layout_marginTop="@dimen/_4sdp"
             app:layout_constraintTop_toBottomOf="@id/user_txtName"
             app:layout_constraintStart_toEndOf="@id/imgPerson"
             app:layout_constraintEnd_toStartOf="@id/user_editName"/>
@@ -149,14 +146,14 @@
         android:id="@+id/user_layoutAbout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:layout_marginTop="6dp"
+        android:padding="@dimen/_6sdp"
+        android:layout_marginTop="@dimen/_5sdp"
         app:layout_constraintTop_toBottomOf="@id/user_layoutName">
 
         <ImageView
             android:id="@+id/imgInfo"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="@dimen/_21sdp"
+            android:layout_height="@dimen/_21sdp"
             android:src="@drawable/outline_info_24"
             app:tint="@color/aquamarine4"
             app:layout_constraintStart_toStartOf="parent"
@@ -168,8 +165,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="About"
-            android:textSize="16sp"
-            android:layout_marginStart="15dp"
+            android:textSize="@dimen/_12ssp"
+            android:layout_marginStart="@dimen/_11sdp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/imgInfo"/>
 
@@ -177,14 +174,14 @@
             android:id="@+id/user_txtAbout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="5dp"
+            android:layout_marginStart="@dimen/_11sdp"
+            android:layout_marginTop="@dimen/_3sdp"
+            android:layout_marginEnd="@dimen/_2sdp"
             android:ellipsize="end"
             android:singleLine="true"
-            tools:text="Hey there!! I am using this app!"
+            tools:text="@string/default_about"
             android:textColor="@color/black"
-            android:textSize="18sp"
+            android:textSize="@dimen/_14ssp"
             app:layout_constraintEnd_toStartOf="@id/user_editAbout"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@id/imgInfo"
@@ -192,8 +189,8 @@
 
         <ImageView
             android:id="@+id/user_editAbout"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="@dimen/_21sdp"
+            android:layout_height="@dimen/_21sdp"
             android:src="@drawable/baseline_mode_edit_24"
             app:tint="@color/aquamarine3"
             app:layout_constraintEnd_toEndOf="parent"
@@ -207,14 +204,14 @@
         android:id="@+id/user_layoutPhone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:layout_marginTop="6dp"
+        android:padding="@dimen/_6sdp"
+        android:layout_marginTop="@dimen/_5sdp"
         app:layout_constraintTop_toBottomOf="@id/user_layoutAbout">
 
         <ImageView
             android:id="@+id/imgPhone"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="@dimen/_21sdp"
+            android:layout_height="@dimen/_21sdp"
             android:src="@drawable/baseline_phone_24"
             app:tint="@color/aquamarine4"
             app:layout_constraintStart_toStartOf="parent"
@@ -226,8 +223,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Phone"
-            android:textSize="16sp"
-            android:layout_marginStart="15dp"
+            android:textSize="@dimen/_12sdp"
+            android:layout_marginStart="@dimen/_11sdp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/imgPhone"/>
 
@@ -237,9 +234,9 @@
             android:layout_height="wrap_content"
             tools:text="+91 8734963629"
             android:layout_marginTop="4dp"
-            android:textSize="18sp"
+            android:textSize="@dimen/_12ssp"
             android:textColor="@color/black"
-            android:layout_marginStart="15dp"
+            android:layout_marginStart="@dimen/_11sdp"
             app:layout_constraintTop_toBottomOf="@id/txtPhone"
             app:layout_constraintStart_toEndOf="@id/imgPhone"/>
 
