@@ -3,6 +3,8 @@ package com.ipsmeet.chatapp.activities
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -51,6 +53,23 @@ class OTPActivity : AppCompatActivity() {
                     }
             }
         }
+
+        binding.otpEnterOTP.addTextChangedListener(verifyOTP)
+    }
+
+    private val verifyOTP: TextWatcher = object : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            binding.btnVerify.isEnabled = false
+        }
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            binding.btnVerify.isEnabled = binding.otpEnterOTP.text.toString().trim().isNotEmpty()
+        }
+
+        override fun afterTextChanged(s: Editable?) {
+            binding.btnVerify.isEnabled = binding.otpEnterOTP.text.toString().trim().isNotEmpty()
+        }
+
     }
 
     private fun updateUI() {

@@ -17,10 +17,12 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
 
     class SenderViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val txtMsg: TextView = itemView.findViewById(R.id.senderMsg)
+        val sendTime: TextView = itemView.findViewById(R.id.senderTime)
     }
 
     class ReceiverViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val txtMsg: TextView = itemView.findViewById(R.id.receiverMsg)
+        val receiverTime: TextView = itemView.findViewById(R.id.receiverTime)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {    //  `viewType` is used for implementing different layouts
@@ -49,10 +51,12 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
         if (holder.javaClass == SenderViewHolder::class.java) {
             val viewHolder: SenderViewHolder = holder as SenderViewHolder
             viewHolder.txtMsg.text = messages[position].message
+            viewHolder.sendTime.text = messages[position].timeStamp
         }
         else {
             val viewHolder: ReceiverViewHolder = holder as ReceiverViewHolder
             viewHolder.txtMsg.text = messages[position].message
+            viewHolder.receiverTime.text = messages[position].timeStamp
         }
     }
 

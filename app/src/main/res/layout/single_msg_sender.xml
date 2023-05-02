@@ -4,23 +4,39 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="3dp">
+    android:padding="3dp" >
 
-    <TextView
-        android:id="@+id/senderMsg"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="Hello!!"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:fontFamily="serif-monospace"
-        android:textStyle="bold"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/_3sdp"
         android:background="@drawable/shape_sender"
-        android:layout_marginEnd="25dp"
-        android:padding="10dp"
-        android:maxWidth="234dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/senderMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:maxWidth="@dimen/_234sdp"
+            android:padding="@dimen/_5ssp"
+            android:textColor="@color/black"
+            android:textSize="17sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/senderTime"
+            tools:text="Send " />
+
+        <TextView
+            android:id="@+id/senderTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/_10ssp"
+            android:padding="@dimen/_2ssp"
+            android:textSize="@dimen/_10ssp"
+            app:layout_constraintBottom_toBottomOf="@id/senderMsg"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="10:10" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

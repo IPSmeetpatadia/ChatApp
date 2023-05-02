@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -42,6 +41,9 @@ class MainActivity : AppCompatActivity() {
 
     var listPhoneNumbers = arrayListOf<String>()
     var chatData = arrayListOf<UserDataClass>()
+    var friendList = arrayListOf<String>()
+    lateinit var foundUsersKey: String
+    lateinit var dialog: Dialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        foundUsersKey = ""
         auth = FirebaseAuth.getInstance()
         userID = auth.currentUser!!.uid
 
@@ -99,7 +102,8 @@ class MainActivity : AppCompatActivity() {
                                                                     Log.d("key", key)
                                                                     Log.d("token", token)
 
-                                                                    val bindDialog: PopupViewProfileBinding = PopupViewProfileBinding.inflate(LayoutInflater.from(this@MainActivity))
+                                                                    val bindDialog: PopupViewProfileBinding = PopupViewProfileBinding.inflate(
+                                                                        LayoutInflater.from(this@MainActivity))
 
                                                                     val dialog = Dialog(this@MainActivity)
                                                                     dialog.setContentView(bindDialog.root)
@@ -175,6 +179,110 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity ~ Database Error", error.message)
             }
         })
+
+        binding.mainBtnFAB.setOnClickListener {
+            bindingDialog = LayoutAddFriendsBinding.inflate(LayoutInflater.from(this))
+
+            dialog = Dialog(this)
+            dialog.setContentView(bindingDialog.root)
+            dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.show()
+
+            bindingDialog.layoutSearch.setOnClickListener {
+                var matchedNumber = ""
+
+                //  FETCHING ALL THE PHONE NUMBERS
+                FirebaseDatabase.getInstance().getReference("Users")
+                    .addValueEventListener(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (snapshot.exists()) {
+                                for (i in snapshot.children) {
+                                    val user = i.getValue(UserDataClass::class.java)
+                                    user!!.key = i.key.toString()
+                                    //  AND STORING THAT PHONE NUMBER IN ARRAY-LIST
+                                    listPhoneNumbers.add(user.phoneNumber)
+                                    Log.d("listPhoneNumbers", listPhoneNumbers.toString())
+
+                                    //  IF ENTERED NUMBER EXISTS IN THE LIST
+                                    for (num in listPhoneNumbers) {
+                                        if (bindingDialog.edtxtFindPhone.text.toString() == num) {
+                                            Log.d("matched number", num)
+                                            matchedNumber =
+                                                num     // STORE NUMBER AS `matchedNumber`
+                                        }
+                                    }
+
+                                    //  FETCH USER'S userID AS PER `matchedNumber`
+                                    if (matchedNumber == user.phoneNumber) {
+                                        Log.d("user.key", user.key)
+                                        foundUsersKey = user.key
+                                        bindingDialog.recyclerViewFoundUSer.apply {
+                                            layoutManager = LinearLayoutManager(
+                                                dialog.context,
+                                                LinearLayoutManager.VERTICAL,
+                                                false
+                                            )
+                                            adapter = FoundUserAdapter(dialog.context, user,
+                                                object :
+                                                    FoundUserAdapter.OnClick {     // AND STORE IT IN `Friend List`
+                                                    override fun clickListener(key: String) {
+                                                        chatData.clear()
+                                                        FirebaseDatabase.getInstance()
+                                                            .getReference("Users/$userID")
+                                                            .child("Friend List")
+                                                            .push()
+                                                            .setValue(key)
+                                                        dialog.dismiss()
+                                                    }
+                                                })
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.d("Failed to find user", error.message)
+                        }
+                    })
+
+                //  IF USER IS ALREADY ADDED AS FRIEND
+                FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
+                    .addValueEventListener(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (snapshot.exists()) {
+                                Log.d("snapshot", snapshot.toString())
+                                Log.d("snapshot.children", snapshot.children.toString())
+                                Log.d("snapshot.key", snapshot.key.toString())
+                                Log.d("snapshot.value", snapshot.value.toString())
+
+                                for (n in snapshot.children) {
+                                    Log.d("n", n.toString())
+                                    val fList = n.value.toString()
+                                    Log.d("List", fList)
+                                    friendList.add(fList)
+                                    Log.d("friendList", friendList.toString())
+
+                                }
+                                for (a in friendList) {
+                                    Log.d("a", a)
+                                    if (foundUsersKey == a) {
+                                        dialog.dismiss()
+                                        val d = Dialog(this@MainActivity)
+                                        d.setContentView(R.layout.layout_user_exists)
+                                        d.show()
+                                        break
+                                    }
+                                }
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.d("Failed to load Friend List", error.message)
+                        }
+                    })
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -184,72 +292,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_addFriend -> {
-                Log.d("phone numbers", listPhoneNumbers.toString())
-                bindingDialog = LayoutAddFriendsBinding.inflate(LayoutInflater.from(this))
-
-                val dialog = Dialog(this)
-                dialog.setContentView(bindingDialog.root)
-                dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                dialog.show()
-
-                bindingDialog.layoutSearch.setOnClickListener {
-                    var matchedNumber = ""
-
-                    FirebaseDatabase.getInstance().getReference("Users")
-                        .addValueEventListener(object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                                chatData.clear()
-                                if (snapshot.exists()) {
-                                    for (i in snapshot.children) {
-                                        val user = i.getValue(UserDataClass::class.java)
-                                        user!!.key = i.key.toString()
-                                        listPhoneNumbers.add(user.phoneNumber)
-                                        Log.d("listPhoneNumbers", listPhoneNumbers.toString())
-
-                                        for (num in listPhoneNumbers) {
-                                            if (bindingDialog.edtxtFindPhone.text.toString() == num) {
-                                                Toast.makeText(this@MainActivity, "User Found", Toast.LENGTH_SHORT).show()
-                                                Log.d("matched number", num)
-                                                matchedNumber = num
-                                            }
-                                        }
-
-                                        if (matchedNumber == user.phoneNumber) {
-                                            Log.d("user.userName", user.key)
-                                            bindingDialog.recyclerViewFoundUSer.apply {
-                                                layoutManager = LinearLayoutManager(dialog.context, LinearLayoutManager.VERTICAL,false)
-                                                adapter = FoundUserAdapter(dialog.context, user,
-                                                        object : FoundUserAdapter.OnClick {
-                                                            override fun clickListener(key: String) {
-                                                                FirebaseDatabase.getInstance().getReference("Users/$userID")
-                                                                    .child("Friend List")
-                                                                    .push()
-                                                                    .setValue(key)
-                                                                dialog.dismiss()
-                                                            }
-                                                        })
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            override fun onCancelled(error: DatabaseError) {
-                                Log.d("Failed to find user", error.message)
-                            }
-                        })
-                }
-
-            }
-
             R.id.menu_profile -> {
-                startActivity(Intent(this, ProfileActivity::class.java))
+                startActivity(
+                    Intent(this, ProfileActivity::class.java)
+                )
             }
 
             R.id.menu_signOut -> {
-                val bindDialog: LayoutDialogBinding =
-                    LayoutDialogBinding.inflate(LayoutInflater.from(this))
+                val bindDialog: LayoutDialogBinding = LayoutDialogBinding.inflate(LayoutInflater.from(this))
 
                 val dialog = Dialog(this)
                 dialog.setContentView(bindDialog.root)

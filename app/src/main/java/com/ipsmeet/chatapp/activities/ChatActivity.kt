@@ -2,11 +2,13 @@ package com.ipsmeet.chatapp.activities
 
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.volley.Response
@@ -23,8 +25,8 @@ import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import org.json.JSONObject
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 
 class ChatActivity : AppCompatActivity() {
 
@@ -42,6 +44,7 @@ class ChatActivity : AppCompatActivity() {
     lateinit var message: String
     private lateinit var receiverToken: String
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar!!.hide()
@@ -60,6 +63,15 @@ class ChatActivity : AppCompatActivity() {
 
         binding.commsBack.setOnClickListener {
             updateUI()
+        }
+
+        binding.commsName.setOnClickListener {
+                startActivity(
+                    Intent(this@ChatActivity, ViewProfileActivity::class.java)
+                        .putExtra("userID", receiverID)
+                        .putExtra("token", receiverToken)
+            )
+            finish()
         }
 
         val linearLayoutManager = LinearLayoutManager(this)
@@ -141,11 +153,10 @@ class ChatActivity : AppCompatActivity() {
 
         binding.btnSendMsg.setOnClickListener {
             chats.clear()
-
             val msg = MessagesDataClass(
                 message = binding.commsTypeMsg.text.toString().trim(),
                 senderID = senderID,
-                timeStamp = Date().time.toFloat()
+                timeStamp = SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time)
             )
 
             //  CREATING CHAT-ROOM TO STORE CHATS

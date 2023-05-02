@@ -71,7 +71,6 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         Log.e("TAG", "onMessageReceived: Data Received...")
         generateNotification(message.notification!!.title!!, message.notification!!.body!!)
-
     }
 
     override fun onNewToken(token: String) {
