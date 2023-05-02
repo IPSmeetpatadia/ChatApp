@@ -1,13 +1,17 @@
 package com.ipsmeet.chatapp.activities
 
+import android.app.Dialog
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.LayoutInflater
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +25,7 @@ import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.ipsmeet.chatapp.adapters.MessagesAdapter
 import com.ipsmeet.chatapp.databinding.ActivityChatBinding
+import com.ipsmeet.chatapp.databinding.LayoutDeleteBinding
 import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import org.json.JSONObject
@@ -35,6 +40,8 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var chatReference: DatabaseReference
     private lateinit var firebaseDatabase: FirebaseDatabase
 
+    lateinit var senderID: String
+    lateinit var receiverID: String
     private lateinit var senderRoom: String
     private lateinit var receiverRoom: String
     var chats = arrayListOf<MessagesDataClass>()
@@ -53,8 +60,8 @@ class ChatActivity : AppCompatActivity() {
 
         firebaseDatabase = FirebaseDatabase.getInstance()
 
-        val senderID = FirebaseAuth.getInstance().currentUser!!.uid   // ID of logged-in user
-        val receiverID = intent.getStringExtra("userID")   // ID of other person
+        senderID = FirebaseAuth.getInstance().currentUser!!.uid   // ID of logged-in user
+        receiverID = intent.getStringExtra("userID").toString()   // ID of other person
         receiverToken = intent.getStringExtra("token").toString()   // token of other person
 
         //  CREATING ROOM, FOR CHAT, TO STORE DATA USER-VISE
@@ -65,18 +72,56 @@ class ChatActivity : AppCompatActivity() {
             updateUI()
         }
 
+        binding.commsProfile.setOnClickListener {
+            openProfile()
+        }
+
         binding.commsName.setOnClickListener {
-                startActivity(
-                    Intent(this@ChatActivity, ViewProfileActivity::class.java)
-                        .putExtra("userID", receiverID)
-                        .putExtra("token", receiverToken)
-            )
-            finish()
+            openProfile()
         }
 
         val linearLayoutManager = LinearLayoutManager(this)
         linearLayoutManager.stackFromEnd = true
-        messagesAdapter = MessagesAdapter(this@ChatActivity, chats)
+        messagesAdapter = MessagesAdapter(this@ChatActivity, chats,
+        object : MessagesAdapter.MessageActionListener {
+            override fun longPressDelete(mdc: MessagesDataClass) {      // long-press on message
+                val bindingDialog = LayoutDeleteBinding.inflate(LayoutInflater.from(this@ChatActivity))
+                val dialog = Dialog(this@ChatActivity)
+                dialog.setContentView(bindingDialog.root)
+                dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                dialog.show()
+
+                bindingDialog.deleteYes.setOnClickListener {
+                    FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Messages")
+                        .addValueEventListener(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    if (snapshot.exists()) {
+                                        for (i in snapshot.children) {
+                                            val listData = i.getValue(MessagesDataClass::class.java)
+                                            listData?.key = i.key.toString()
+
+                                            if (mdc.key == listData?.key) {
+                                                FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Messages/${listData.key}").removeValue()
+                                                FirebaseDatabase.getInstance().getReference("Chats/$receiverRoom/Messages/${listData.key}").removeValue()
+                                                dialog.dismiss()
+                                            }
+                                        }
+                                    }
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    Log.d("DatabaseError", error.message)
+                                }
+                            }
+                        )
+                }
+
+                bindingDialog.deleteNo.setOnClickListener {
+                    dialog.dismiss()
+                }
+            }
+
+        })
 
         binding.commsRecyclerView.apply {
             layoutManager = linearLayoutManager
@@ -122,11 +167,19 @@ class ChatActivity : AppCompatActivity() {
                 if (snapshot.exists()) {
                     for (msgs in snapshot.children) {
                         val comms = msgs.getValue(MessagesDataClass::class.java)
-                        chats.add(comms!!)
+                        comms!!.key = msgs.key.toString()
+                        chats.add(comms)
                         message = comms.message
                     }
                     val position = binding.commsRecyclerView.adapter?.itemCount
                     binding.commsRecyclerView.smoothScrollToPosition(position!!)
+                    messagesAdapter.notifyDataSetChanged()
+                }
+                else {
+                    /*
+                        Avoid Error --> java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
+                        prevents activity to crash, when we clear all chat and there is no messages to display
+                    */
                     messagesAdapter.notifyDataSetChanged()
                 }
             }
@@ -159,17 +212,19 @@ class ChatActivity : AppCompatActivity() {
                 timeStamp = SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time)
             )
 
+            val pushKey = FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Messages").push().key
+
             //  CREATING CHAT-ROOM TO STORE CHATS
             firebaseDatabase.getReference("Chats")
                 .child(senderRoom)
                 .child("Messages")
-                .push()
+                .child(pushKey!!)
                 .setValue(msg)
                 .addOnCompleteListener {
                     firebaseDatabase.getReference("Chats")
                         .child(receiverRoom)
                         .child("Messages")
-                        .push()
+                        .child(pushKey)
                         .setValue(msg)
                         .addOnSuccessListener {
                             sendNotification(name, message, receiverToken)  // passing required parameters to send notification
@@ -181,10 +236,6 @@ class ChatActivity : AppCompatActivity() {
 
         binding.sendCam.setOnClickListener {
             openCamera()
-        }
-
-        binding.commsProfile.setOnClickListener {
-
         }
 
     }
@@ -242,6 +293,15 @@ class ChatActivity : AppCompatActivity() {
             // if user clear EditTextView, then Button will be disable
             binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.trim().isNotEmpty()
         }
+    }
+
+    private fun openProfile() {
+        startActivity(
+            Intent(this@ChatActivity, ViewProfileActivity::class.java)
+                .putExtra("userID", receiverID)
+                .putExtra("token", receiverToken)
+        )
+        finish()
     }
 
     private fun updateUI() {

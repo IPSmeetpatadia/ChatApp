@@ -10,7 +10,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 
-class MessagesAdapter(private val context: Context, private val messages: List<MessagesDataClass>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessagesAdapter(private val context: Context, private val messages: List<MessagesDataClass>, val eventListener: MessageActionListener)
+    : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var itemSend = 1
     private val itemReceive = 2
@@ -52,12 +53,25 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
             val viewHolder: SenderViewHolder = holder as SenderViewHolder
             viewHolder.txtMsg.text = messages[position].message
             viewHolder.sendTime.text = messages[position].timeStamp
+
+            viewHolder.itemView.setOnLongClickListener {
+                eventListener.longPressDelete(messages[position])
+                true
+            }
         }
         else {
             val viewHolder: ReceiverViewHolder = holder as ReceiverViewHolder
             viewHolder.txtMsg.text = messages[position].message
             viewHolder.receiverTime.text = messages[position].timeStamp
+
+            viewHolder.itemView.setOnLongClickListener {
+                eventListener.longPressDelete(messages[position])
+                true
+            }
         }
     }
 
+    interface MessageActionListener {
+        fun longPressDelete(senderID: MessagesDataClass)
+    }
 }
