@@ -2,11 +2,14 @@ package com.ipsmeet.chatapp.activities
 
 import android.app.Dialog
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -33,6 +36,7 @@ import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import dmax.dialog.SpotsDialog
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -55,6 +59,7 @@ class ChatActivity : AppCompatActivity() {
     lateinit var message: String
     private lateinit var receiverToken: String
     private lateinit var progress: SpotsDialog
+    private lateinit var byteArray: ByteArray
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -177,7 +182,8 @@ class ChatActivity : AppCompatActivity() {
                         chats.add(comms)
                         message = comms.message
                     }
-                    val position = binding.commsRecyclerView.adapter?.itemCount
+                    val recyclerview = binding.commsRecyclerView
+                    val position = recyclerview.adapter?.itemCount
                     binding.commsRecyclerView.smoothScrollToPosition(position!!)
                     messagesAdapter.notifyDataSetChanged()
                 }
@@ -244,7 +250,73 @@ class ChatActivity : AppCompatActivity() {
             selectImage()
         }
 
+        binding.sendCam.setOnClickListener {
+            openCamera()
+        }
+
     }
+
+    private fun openCamera() {
+        clickPhoto.launch(
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        )
+    }
+
+    private val clickPhoto: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            progress.show()
+            val photo = result.data!!.extras!!["data"] as Bitmap
+            val baos = ByteArrayOutputStream()
+            photo.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+            byteArray = baos.toByteArray()  // to upload we need `ByteArray`
+
+            val imgKey = FirebaseDatabase.getInstance().getReference("Chats").push().key
+
+            val storageReference = FirebaseStorage.getInstance().getReference("Chat Media/$imgKey")
+            storageReference.putBytes(byteArray)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        FirebaseStorage.getInstance().getReference("Chat Media/$imgKey").downloadUrl
+                            .addOnSuccessListener { uri ->
+                                val filePath = uri.toString()
+                                Log.d("filePath", filePath)
+
+                                chats.clear()
+                                val msg = MessagesDataClass(
+                                    key = imgKey!!,
+                                    message = "",
+                                    senderID = senderID,
+                                    imgURL = filePath,
+                                    timeStamp = SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time)
+                                )
+
+                                firebaseDatabase.getReference("Chats")
+                                    .child(senderRoom)
+                                    .child("Messages")
+                                    .child(imgKey)
+                                    .setValue(msg)
+                                    .addOnCompleteListener {
+                                        firebaseDatabase.getReference("Chats")
+                                            .child(receiverRoom)
+                                            .child("Messages")
+                                            .child(imgKey)
+                                            .setValue(msg)
+                                            .addOnSuccessListener {
+                                                sendNotification(name, "Photo", receiverToken)  // passing required parameters to send notification
+                                                progress.dismiss()
+                                            }
+                                    }
+                            }
+                            .addOnFailureListener { e ->
+                                Log.d("fail filePath", e.message.toString())
+                                progress.dismiss()
+                            }
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Fail", Toast.LENGTH_SHORT).show()
+                }
+        }
 
     private fun selectImage() {
         val intent = Intent()

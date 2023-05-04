@@ -73,7 +73,7 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
                         Glide.with(context).load(it).into(viewHolder.sendImg)
                     }
 
-                viewHolder.sendTime.text = messages[position].timeStamp
+                viewHolder.sendImgTime.text = messages[position].timeStamp
             }
             else {
                 viewHolder.sendImg.visibility = View.GONE
@@ -105,7 +105,7 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
                         Glide.with(context).load(it).into(viewHolder.receiverImg)
                     }
 
-                viewHolder.receiverTime.text = messages[position].timeStamp
+                viewHolder.receiverImgTime.text = messages[position].timeStamp
             }
             else {
                 viewHolder.receiverImg.visibility = View.GONE

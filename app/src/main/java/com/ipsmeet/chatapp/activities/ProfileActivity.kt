@@ -110,7 +110,7 @@ class ProfileActivity : AppCompatActivity() {
 //                    .putExtra(MediaStore.EXTRA_OUTPUT,  MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
 
                 if (cameraIntent.resolveActivity(packageManager) != null) {
-                    startActivityForResult(cameraIntent, 1)  // camera request code = 1888
+                    startActivityForResult(cameraIntent, 1)
                 }
 
                 bottomSheetDialog.dismiss()
