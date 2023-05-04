@@ -35,7 +35,6 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var photo: Bitmap
     private lateinit var byteArray: ByteArray
     private lateinit var imgURI: Uri
-
     private lateinit var databaseReference: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,10 +107,10 @@ class ProfileActivity : AppCompatActivity() {
         bottomSheetDialog.findViewById<ConstraintLayout>(R.id.updateUser_layoutCam)
             ?.setOnClickListener {
                 val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)  // have the camera application capture an image and return it
-                    .putExtra(MediaStore.EXTRA_OUTPUT,  MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
+//                    .putExtra(MediaStore.EXTRA_OUTPUT,  MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
 
-                if (cameraIntent.resolveActivity(this.packageManager) != null) {
-                    startActivityForResult(cameraIntent, 1888)  // camera request code = 1888
+                if (cameraIntent.resolveActivity(packageManager) != null) {
+                    startActivityForResult(cameraIntent, 1)  // camera request code = 1888
                 }
 
                 bottomSheetDialog.dismiss()
@@ -128,7 +127,7 @@ class ProfileActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == 1888 && resultCode == RESULT_OK) {
+        if (requestCode == 1 && resultCode == RESULT_OK) {
             photo = data!!.extras!!["data"] as Bitmap
             binding.userProfileImg.setImageBitmap(photo)
 

@@ -7,11 +7,13 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,11 +25,13 @@ import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
+import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.adapters.MessagesAdapter
 import com.ipsmeet.chatapp.databinding.ActivityChatBinding
 import com.ipsmeet.chatapp.databinding.LayoutDeleteBinding
 import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
+import dmax.dialog.SpotsDialog
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
@@ -40,8 +44,8 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var chatReference: DatabaseReference
     private lateinit var firebaseDatabase: FirebaseDatabase
 
-    lateinit var senderID: String
-    lateinit var receiverID: String
+    private lateinit var senderID: String
+    private lateinit var receiverID: String
     private lateinit var senderRoom: String
     private lateinit var receiverRoom: String
     var chats = arrayListOf<MessagesDataClass>()
@@ -50,6 +54,7 @@ class ChatActivity : AppCompatActivity() {
     lateinit var name: String
     lateinit var message: String
     private lateinit var receiverToken: String
+    private lateinit var progress: SpotsDialog
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +63,7 @@ class ChatActivity : AppCompatActivity() {
         binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        progress = SpotsDialog(this, R.style.Custom)
         firebaseDatabase = FirebaseDatabase.getInstance()
 
         senderID = FirebaseAuth.getInstance().currentUser!!.uid   // ID of logged-in user
@@ -234,47 +240,73 @@ class ChatActivity : AppCompatActivity() {
             binding.commsTypeMsg.setText("")
         }
 
-        binding.sendCam.setOnClickListener {
-            openCamera()
+        binding.sendAttach.setOnClickListener {
+            selectImage()
         }
 
     }
 
-    private fun openCamera() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            .putExtra(MediaStore.EXTRA_OUTPUT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
-
-        if (cameraIntent.resolveActivity(this.packageManager) != null) {
-            startActivityForResult(cameraIntent, 1888)
-        }
+    private fun selectImage() {
+        val intent = Intent()
+        intent.type = "image/*"
+        intent.action = Intent.ACTION_GET_CONTENT
+        imagePicker.launch(intent)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    private val imagePicker: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            progress.show()
+            val imgURI = result.data?.data!!
+            Log.d("imgURI", imgURI.toString())
 
-        if (requestCode == 1888 && resultCode == RESULT_OK) {
-            if (data!!.data != null) {
-                val selectedImg = data.data
+            val imgKey = FirebaseDatabase.getInstance().getReference("Chats").push().key
 
-                FirebaseStorage.getInstance().getReference("Chat Media/${ Calendar.getInstance().time }").putFile(selectedImg!!)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            FirebaseStorage.getInstance().getReference("Chat Media/${ Calendar.getInstance().time }").downloadUrl
-                                .addOnSuccessListener { uri ->
-                                    val filePath = uri.toString()
-                                    Log.d("filePath", filePath)
-                                }
-                                .addOnFailureListener {
-                                    Log.d("fail filePath", it.message.toString())
-                                }
-                        }
+            //  SEND IMAGE IN CHAT
+            FirebaseStorage.getInstance().getReference("Chat Media/$imgKey").putFile(imgURI)
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        FirebaseStorage.getInstance().getReference("Chat Media/$imgKey").downloadUrl
+                            .addOnSuccessListener { uri ->
+                                val filePath = uri.toString()
+                                Log.d("filePath", filePath)
+
+                                chats.clear()
+                                val msg = MessagesDataClass(
+                                    key = imgKey!!,
+                                    message = "",
+                                    senderID = senderID,
+                                    imgURL = filePath,
+                                    timeStamp = SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time)
+                                )
+
+                                firebaseDatabase.getReference("Chats")
+                                    .child(senderRoom)
+                                    .child("Messages")
+                                    .child(imgKey)
+                                    .setValue(msg)
+                                    .addOnCompleteListener {
+                                        firebaseDatabase.getReference("Chats")
+                                            .child(receiverRoom)
+                                            .child("Messages")
+                                            .child(imgKey)
+                                            .setValue(msg)
+                                            .addOnSuccessListener {
+                                                sendNotification(name, "Photo", receiverToken)  // passing required parameters to send notification
+                                                progress.dismiss()
+                                            }
+                                    }
+                            }
+                            .addOnFailureListener { e ->
+                                Log.d("fail filePath", e.message.toString())
+                                progress.dismiss()
+                            }
                     }
-                    .addOnFailureListener {
-                        Log.d("fail task", it.message.toString())
-                    }
-            }
+
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Fail", Toast.LENGTH_SHORT).show()
+                }
         }
-    }
 
     //  TEXT-WATCHER FOR SEND BUTTON, SO USER CANNOT TRIGGER BUTTON EVENT WITHOUT EMPTY EDIT_TEXTVIEW
     private var messageSend: TextWatcher = object : TextWatcher {

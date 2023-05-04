@@ -1,16 +1,21 @@
 package com.ipsmeet.chatapp.adapters
 
 import android.content.Context
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.dataclasses.MessagesDataClass
 
-class MessagesAdapter(private val context: Context, private val messages: List<MessagesDataClass>, val eventListener: MessageActionListener)
+class MessagesAdapter(private val context: Context, private val messages: List<MessagesDataClass>, private val eventListener: MessageActionListener)
     : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var itemSend = 1
@@ -19,11 +24,15 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
     class SenderViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val txtMsg: TextView = itemView.findViewById(R.id.senderMsg)
         val sendTime: TextView = itemView.findViewById(R.id.senderTime)
+        val sendImg: ImageView = itemView.findViewById(R.id.senderImg)
+        val sendImgTime: TextView = itemView.findViewById(R.id.senderImgTime)
     }
 
     class ReceiverViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val txtMsg: TextView = itemView.findViewById(R.id.receiverMsg)
         val receiverTime: TextView = itemView.findViewById(R.id.receiverTime)
+        val receiverImg: ImageView = itemView.findViewById(R.id.receiverImg)
+        val receiverImgTime: TextView = itemView.findViewById(R.id.receiverImgTime)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {    //  `viewType` is used for implementing different layouts
@@ -49,24 +58,63 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        //  SENDER
         if (holder.javaClass == SenderViewHolder::class.java) {
             val viewHolder: SenderViewHolder = holder as SenderViewHolder
-            viewHolder.txtMsg.text = messages[position].message
-            viewHolder.sendTime.text = messages[position].timeStamp
+
+            if (messages[position].message == "") {
+                viewHolder.sendImg.visibility = View.VISIBLE
+                viewHolder.sendImgTime.visibility = View.VISIBLE
+                viewHolder.txtMsg.visibility = View.GONE
+                viewHolder.sendTime.visibility = View.GONE
+
+                FirebaseStorage.getInstance().getReference("Chat Media/${ messages[position].key }").downloadUrl
+                    .addOnSuccessListener {
+                        Glide.with(context).load(it).into(viewHolder.sendImg)
+                    }
+
+                viewHolder.sendTime.text = messages[position].timeStamp
+            }
+            else {
+                viewHolder.sendImg.visibility = View.GONE
+                viewHolder.sendImgTime.visibility = View.GONE
+                viewHolder.txtMsg.visibility = View.VISIBLE
+                viewHolder.sendTime.visibility = View.VISIBLE
+
+                viewHolder.txtMsg.text = messages[position].message
+                viewHolder.sendTime.text = messages[position].timeStamp
+            }
 
             viewHolder.itemView.setOnLongClickListener {
                 eventListener.longPressDelete(messages[position])
                 true
             }
         }
+        //  RECEIVER
         else {
             val viewHolder: ReceiverViewHolder = holder as ReceiverViewHolder
-            viewHolder.txtMsg.text = messages[position].message
-            viewHolder.receiverTime.text = messages[position].timeStamp
 
-            viewHolder.itemView.setOnLongClickListener {
-                eventListener.longPressDelete(messages[position])
-                true
+            if (messages[position].message == "") {
+                viewHolder.receiverImg.visibility = View.VISIBLE
+                viewHolder.receiverImgTime.visibility = View.VISIBLE
+                viewHolder.txtMsg.visibility = View.GONE
+                viewHolder.receiverTime.visibility = View.GONE
+
+                FirebaseStorage.getInstance().getReference("Chat Media/${ messages[position].key }").downloadUrl
+                    .addOnSuccessListener {
+                        Glide.with(context).load(it).into(viewHolder.receiverImg)
+                    }
+
+                viewHolder.receiverTime.text = messages[position].timeStamp
+            }
+            else {
+                viewHolder.receiverImg.visibility = View.GONE
+                viewHolder.receiverImgTime.visibility = View.GONE
+                viewHolder.txtMsg.visibility = View.VISIBLE
+                viewHolder.receiverTime.visibility = View.VISIBLE
+
+                viewHolder.txtMsg.text = messages[position].message
+                viewHolder.receiverTime.text = messages[position].timeStamp
             }
         }
     }
