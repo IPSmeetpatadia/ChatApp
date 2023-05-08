@@ -47,12 +47,24 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/_10sdp"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_16ssp"
+                android:textSize="@dimen/_15ssp"
                 android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/comms_profile"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toTopOf="@id/comms_profile"
+                app:layout_constraintBottom_toTopOf="@id/comms_status"
                 tools:text="Meet Patadia" />
+
+            <TextView
+                android:id="@+id/comms_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_10sdp"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_9ssp"
+                app:layout_constraintTop_toBottomOf="@id/comms_name"
+                app:layout_constraintStart_toEndOf="@id/comms_profile"
+                app:layout_constraintBottom_toBottomOf="@id/comms_profile"
+                tools:text="Online" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

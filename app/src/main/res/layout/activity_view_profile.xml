@@ -57,15 +57,22 @@
             app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/aquamarine4" />
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/viewProfile_img"
-            android:layout_width="@dimen/_115sdp"
-            android:layout_height="@dimen/_115sdp"
+        <FrameLayout
+            android:id="@+id/viewProfile_frameLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_24sdp"
-            android:src="@drawable/user_default_img"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/viewProfile_img"
+                android:layout_width="@dimen/_115sdp"
+                android:layout_height="@dimen/_115sdp"
+                android:src="@drawable/user_default_img" />
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/viewProfile_name"
@@ -77,7 +84,7 @@
             android:textSize="@dimen/_20ssp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewProfile_img"
+            app:layout_constraintTop_toBottomOf="@id/viewProfile_frameLayout"
             tools:text="Meet Patadia" />
 
         <TextView
@@ -91,6 +98,20 @@
             app:layout_constraintTop_toBottomOf="@id/viewProfile_name"
             tools:text="+91 9324493252" />
 
+        <TextView
+            android:id="@+id/viewProfile_lastSeen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Last seen at 11:11 AM"
+            android:layout_marginTop="@dimen/_7sdp"
+            android:textSize="@dimen/_11ssp"
+            android:background="@drawable/shape_gray"
+            android:paddingStart="@dimen/_5sdp"
+            android:paddingEnd="@dimen/_5sdp"
+            android:paddingBottom="@dimen/_1sdp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/viewProfile_number"/>
 
         <ImageView
             android:id="@+id/viewProfile_openChat"
@@ -100,7 +121,7 @@
             android:src="@drawable/baseline_message_24"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewProfile_number"
+            app:layout_constraintTop_toBottomOf="@id/viewProfile_lastSeen"
             app:tint="@color/aquamarine4" />
 
 

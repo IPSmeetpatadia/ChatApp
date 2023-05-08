@@ -1,11 +1,13 @@
 package com.ipsmeet.chatapp.activities
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.bumptech.glide.Glide
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -15,10 +17,16 @@ import com.ipsmeet.chatapp.R
 import com.ipsmeet.chatapp.databinding.ActivityViewProfileBinding
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
+@Suppress("DEPRECATION")
 class ViewProfileActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityViewProfileBinding
+
+    private lateinit var personID: String
+    private lateinit var personToken: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,8 +35,10 @@ class ViewProfileActivity : AppCompatActivity() {
 
         supportActionBar!!.hide()
 
-        val personID = intent.getStringExtra("userID")   // ID of other person
-        val personToken = intent.getStringExtra("token").toString()   // token of other person
+        personID = intent.getStringExtra("userID").toString()   // ID of other person
+        personToken = intent.getStringExtra("token").toString()   // token of other person
+
+        isPersonOnline()
 
         binding.viewProfileBack.setOnClickListener {
             updateUI()
@@ -59,7 +69,7 @@ class ViewProfileActivity : AppCompatActivity() {
                 }
             })
 
-        val localFile = File.createTempFile("tempfile", "jpeg")
+        val localFile = File.createTempFile("tempFile", "jpeg")
         FirebaseStorage.getInstance().getReference("Images/*$personID").getFile(localFile)
             .addOnSuccessListener {
                 val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
@@ -78,6 +88,20 @@ class ViewProfileActivity : AppCompatActivity() {
         }
     }
 
+    private fun isPersonOnline() {
+        FirebaseDatabase.getInstance().getReference("Active Users/$personID")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    binding.viewProfileLastSeen.text = snapshot.value.toString()
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.d("status error", error.message)
+                }
+            })
+    }
+
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         super.onBackPressed()
         updateUI()
@@ -91,5 +115,21 @@ class ViewProfileActivity : AppCompatActivity() {
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
         finish()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        //  IF USER IS ACTIVE ON APP, STORE IT AS ACTIVE USER
+        FirebaseDatabase.getInstance().reference.child("Active Users")
+            .child(FirebaseAuth.getInstance().currentUser!!.uid).setValue("Online")
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        //  IF USER MINIMIZE APP, STORES THE LAST SEEN OF USER
+        FirebaseDatabase.getInstance().reference.child("Active Users")
+            .child(FirebaseAuth.getInstance().currentUser!!.uid)
+            .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
     }
 }

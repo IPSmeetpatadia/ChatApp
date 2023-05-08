@@ -1,14 +1,15 @@
 package com.ipsmeet.chatapp.activities
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
@@ -39,7 +40,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.*
 
 class ChatActivity : AppCompatActivity() {
 
@@ -61,6 +62,8 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var progress: SpotsDialog
     private lateinit var byteArray: ByteArray
 
+    lateinit var handler: Handler
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,9 +78,11 @@ class ChatActivity : AppCompatActivity() {
         receiverID = intent.getStringExtra("userID").toString()   // ID of other person
         receiverToken = intent.getStringExtra("token").toString()   // token of other person
 
-        //  CREATING ROOM, FOR CHAT, TO STORE DATA USER-VISE
+        //  creating room, for chat, to store data users-vise
         senderRoom = senderID + receiverID
         receiverRoom = receiverID + senderID
+
+        personsStatus()
 
         binding.commsBack.setOnClickListener {
             updateUI()
@@ -95,7 +100,7 @@ class ChatActivity : AppCompatActivity() {
         linearLayoutManager.stackFromEnd = true
         messagesAdapter = MessagesAdapter(this@ChatActivity, chats,
         object : MessagesAdapter.MessageActionListener {
-            override fun longPressDelete(mdc: MessagesDataClass) {      // long-press on message
+            override fun longPressDelete(senderID: MessagesDataClass) {      // long-press on message
                 val bindingDialog = LayoutDeleteBinding.inflate(LayoutInflater.from(this@ChatActivity))
                 val dialog = Dialog(this@ChatActivity)
                 dialog.setContentView(bindingDialog.root)
@@ -111,7 +116,7 @@ class ChatActivity : AppCompatActivity() {
                                             val listData = i.getValue(MessagesDataClass::class.java)
                                             listData?.key = i.key.toString()
 
-                                            if (mdc.key == listData?.key) {
+                                            if (senderID.key == listData?.key) {
                                                 FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Messages/${listData.key}").removeValue()
                                                 FirebaseDatabase.getInstance().getReference("Chats/$receiverRoom/Messages/${listData.key}").removeValue()
                                                 dialog.dismiss()
@@ -131,7 +136,6 @@ class ChatActivity : AppCompatActivity() {
                     dialog.dismiss()
                 }
             }
-
         })
 
         binding.commsRecyclerView.apply {
@@ -184,7 +188,7 @@ class ChatActivity : AppCompatActivity() {
                     }
                     val recyclerview = binding.commsRecyclerView
                     val position = recyclerview.adapter?.itemCount
-                    binding.commsRecyclerView.smoothScrollToPosition(position!!)
+                    binding.commsRecyclerView.smoothScrollToPosition(position!! - 1)
                     messagesAdapter.notifyDataSetChanged()
                 }
                 else {
@@ -253,9 +257,41 @@ class ChatActivity : AppCompatActivity() {
         binding.sendCam.setOnClickListener {
             openCamera()
         }
-
     }
 
+    private fun personsStatus() {
+        FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Status/$receiverID")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.value.toString() == "In Chat") {
+                        binding.commsStatus.text = snapshot.value.toString()
+                    }
+                    else if (snapshot.value.toString() == "Typing...") {
+                        binding.commsStatus.text = snapshot.value.toString()
+                    }
+                    else {
+                        FirebaseDatabase.getInstance().getReference("Active Users/$receiverID")
+                            .addValueEventListener(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    binding.commsStatus.text = snapshot.value.toString()
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    Log.d("status error", error.message)
+                                }
+                            })
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.d("status error", error.message)
+                }
+            })
+    }
+
+    /*
+        IMAGE FROM CAMERA
+    */
     private fun openCamera() {
         clickPhoto.launch(
             Intent(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -318,6 +354,9 @@ class ChatActivity : AppCompatActivity() {
                 }
         }
 
+    /*
+        IMAGE FROM GALLERY
+    */
     private fun selectImage() {
         val intent = Intent()
         intent.type = "image/*"
@@ -393,9 +432,18 @@ class ChatActivity : AppCompatActivity() {
         }
 
         override fun afterTextChanged(s: Editable?) {
+            FirebaseDatabase.getInstance().reference.child("Chats/$receiverRoom/Status/$senderID").setValue("Typing...")
             // if user make some changes in entered text/message (only whitespace is not included)
             // if user clear EditTextView, then Button will be disable
             binding.btnSendMsg.isEnabled = binding.commsTypeMsg.text.trim().isNotEmpty()
+
+            handler = Handler()
+            handler.removeCallbacksAndMessages(null)
+            handler.postDelayed(userStoppedTyping, 2000)
+        }
+
+        val userStoppedTyping = Runnable {
+            FirebaseDatabase.getInstance().reference.child("Chats/$receiverRoom/Status/$senderID").setValue("In Chat")
         }
     }
 
@@ -478,6 +526,13 @@ class ChatActivity : AppCompatActivity() {
             }
         }
         requestQueue.add(jsonObjectRequest)
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    override fun onStop() {
+        super.onStop()
+        FirebaseDatabase.getInstance().reference.child("Chats/$receiverRoom/Status/$senderID")
+            .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
     }
 
 }

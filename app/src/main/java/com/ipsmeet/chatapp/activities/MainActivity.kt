@@ -1,5 +1,6 @@
 package com.ipsmeet.chatapp.activities
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -29,6 +30,9 @@ import com.ipsmeet.chatapp.databinding.LayoutDialogBinding
 import com.ipsmeet.chatapp.databinding.PopupViewProfileBinding
 import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,6 +49,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var foundUsersKey: String
     lateinit var dialog: Dialog
 
+    private lateinit var senderRoom: String
+    private lateinit var receiverRoom: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -60,8 +67,7 @@ class MainActivity : AppCompatActivity() {
                 val userToken = HashMap<String, Any>()
                 userToken["token"] = it.toString()  // userToken.put("token", it.toString())
 
-                FirebaseDatabase.getInstance().getReference("Users/$userID")
-                    .updateChildren(userToken)
+                FirebaseDatabase.getInstance().getReference("Users/$userID").updateChildren(userToken)
             }
 
         //  DISPLAYING FRIENDS AS CHAT
@@ -90,11 +96,7 @@ class MainActivity : AppCompatActivity() {
                                                             object : ChatAdapter.OnClick {
                                                                 //  open chat
                                                                 override fun openChat(key: String, token: String) {
-                                                                    startActivity(
-                                                                        Intent(this@MainActivity, ChatActivity::class.java)
-                                                                            .putExtra("userID", key)
-                                                                            .putExtra("token", token)
-                                                                    )
+                                                                    viewChat(key, token)
                                                                 }
 
                                                                 //  open dialog-box to show profile image
@@ -102,61 +104,49 @@ class MainActivity : AppCompatActivity() {
                                                                     Log.d("key", key)
                                                                     Log.d("token", token)
 
-                                                                    val bindDialog: PopupViewProfileBinding = PopupViewProfileBinding.inflate(
-                                                                        LayoutInflater.from(this@MainActivity))
+                                                                    val bindDialog: PopupViewProfileBinding = PopupViewProfileBinding.inflate(LayoutInflater.from(this@MainActivity))
 
                                                                     val dialog = Dialog(this@MainActivity)
                                                                     dialog.setContentView(bindDialog.root)
                                                                     dialog.show()
 
                                                                     FirebaseDatabase.getInstance().getReference("Users/$key")
-                                                                        .addValueEventListener(object : ValueEventListener {
-                                                                            override fun onDataChange(snapshot: DataSnapshot) {
-                                                                                if (snapshot.exists()) {
+                                                                        .addValueEventListener(
+                                                                            object : ValueEventListener {
+                                                                                override fun onDataChange(snapshot: DataSnapshot) {
+                                                                                    if (snapshot.exists()) {
+                                                                                        val data = snapshot.getValue(UserDataClass::class.java)
+                                                                                        data!!.key = snapshot.key.toString()
+                                                                                        bindDialog.popupViewName.text = data.userName
+                                                                                        Log.d("data.userName", data.userName)
 
-                                                                                    Log.d("snapshot", snapshot.toString())
-
-                                                                                    val data = snapshot.getValue(UserDataClass::class.java)
-                                                                                    data!!.key = snapshot.key.toString()
-                                                                                    bindDialog.popupViewName.text = data.userName
-                                                                                    Log.d("data.userName", data.userName)
-
-                                                                                    //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
-                                                                                    val localFile = File.createTempFile("tempfile", "jpeg")
-                                                                                    FirebaseStorage.getInstance()
-                                                                                        .getReference("Images/*${key}")
-                                                                                        .getFile(localFile)
-                                                                                        .addOnSuccessListener {
-                                                                                            val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
-                                                                                            Glide.with(applicationContext).load(bitmap).into(bindDialog.popupViewProfile)
-                                                                                        }
-                                                                                        .addOnFailureListener {
-                                                                                            Log.d("Fail to load user profiles", it.message.toString())
-                                                                                        }
+                                                                                        //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
+                                                                                        val localFile =
+                                                                                            File.createTempFile("tempFile","jpeg")
+                                                                                        FirebaseStorage.getInstance().getReference("Images/*${key}").getFile(localFile)
+                                                                                            .addOnSuccessListener {
+                                                                                                val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
+                                                                                                Glide.with(applicationContext).load(bitmap).into(bindDialog.popupViewProfile)
+                                                                                            }
+                                                                                            .addOnFailureListener {
+                                                                                                Log.d("Fail to load user profiles", it.message.toString())
+                                                                                            }
+                                                                                    }
                                                                                 }
-                                                                            }
 
-                                                                            override fun onCancelled(error: DatabaseError) {
-                                                                                Log.d("popup failed", error.message)
-                                                                            }
-                                                                        })
+                                                                                override fun onCancelled(error: DatabaseError) {
+                                                                                    Log.d("popup failed", error.message)
+                                                                                }
+                                                                            })
 
                                                                     bindDialog.popupSendMsg.setOnClickListener {
-                                                                        startActivity(
-                                                                            Intent(this@MainActivity, ChatActivity::class.java)
-                                                                                .putExtra("userID", key)
-                                                                                .putExtra("token", token)
-                                                                        )
                                                                         dialog.dismiss()
+                                                                        viewChat(key, token)
                                                                     }
 
                                                                     bindDialog.popupInfo.setOnClickListener {
-                                                                        startActivity(
-                                                                            Intent(this@MainActivity, ViewProfileActivity::class.java)
-                                                                                .putExtra("userID", key)
-                                                                                .putExtra("token", token)
-                                                                        )
                                                                         dialog.dismiss()
+                                                                        viewProfile(key, token)
                                                                     }
                                                                 }
                                                             })
@@ -180,6 +170,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        //  ADD FRIENDS
         binding.mainBtnFAB.setOnClickListener {
             bindingDialog = LayoutAddFriendsBinding.inflate(LayoutInflater.from(this))
 
@@ -199,6 +190,7 @@ class MainActivity : AppCompatActivity() {
                                 for (i in snapshot.children) {
                                     val user = i.getValue(UserDataClass::class.java)
                                     user!!.key = i.key.toString()
+                                    foundUsersKey = user.key
                                     //  AND STORING THAT PHONE NUMBER IN ARRAY-LIST
                                     listPhoneNumbers.add(user.phoneNumber)
                                     Log.d("listPhoneNumbers", listPhoneNumbers.toString())
@@ -215,7 +207,6 @@ class MainActivity : AppCompatActivity() {
                                     //  FETCH USER'S userID AS PER `matchedNumber`
                                     if (matchedNumber == user.phoneNumber) {
                                         Log.d("user.key", user.key)
-                                        foundUsersKey = user.key
                                         bindingDialog.recyclerViewFoundUSer.apply {
                                             layoutManager = LinearLayoutManager(
                                                 dialog.context,
@@ -226,13 +217,13 @@ class MainActivity : AppCompatActivity() {
                                                 object :
                                                     FoundUserAdapter.OnClick {     // AND STORE IT IN `Friend List`
                                                     override fun clickListener(key: String) {
-                                                        chatData.clear()
                                                         FirebaseDatabase.getInstance()
                                                             .getReference("Users/$userID")
                                                             .child("Friend List")
                                                             .push()
                                                             .setValue(key)
                                                         dialog.dismiss()
+                                                        chatData.clear()
                                                     }
                                                 })
                                         }
@@ -299,26 +290,30 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.menu_signOut -> {
-                val bindDialog: LayoutDialogBinding = LayoutDialogBinding.inflate(LayoutInflater.from(this))
-
-                val dialog = Dialog(this)
-                dialog.setContentView(bindDialog.root)
-                dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                dialog.show()
-
-                bindDialog.signOutYes.setOnClickListener {
-                    Firebase.auth.signOut()
-                    updateUI()
-                    dialog.dismiss()
-                }
-
-                bindDialog.signOutNo.setOnClickListener {
-                    dialog.dismiss()
-                }
+                signOut()
             }
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun signOut() {
+        val bindDialog: LayoutDialogBinding = LayoutDialogBinding.inflate(LayoutInflater.from(this))
+
+        val dialog = Dialog(this)
+        dialog.setContentView(bindDialog.root)
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+
+        bindDialog.signOutYes.setOnClickListener {
+            Firebase.auth.signOut()
+            dialog.dismiss()
+            updateUI()
+        }
+
+        bindDialog.signOutNo.setOnClickListener {
+            dialog.dismiss()
+        }
     }
 
     private fun updateUI() {
@@ -331,9 +326,58 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
 
+    //  OPEN VIEW PROFILE ACTIVITY
+    private fun viewProfile(key: String, token: String) {
+        startActivity(
+            Intent(this@MainActivity, ViewProfileActivity::class.java)
+                .putExtra("userID", key)
+                .putExtra("token", token)
+        )
+    }
+
+    //  OPEN CHAT ACTIVITY
+    private fun viewChat(key: String, token: String) {
+        //  creating room, for chat, to store data users-vise
+        senderRoom = userID + key
+        receiverRoom = key + userID
+
+        FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Status").child(userID).setValue("In Chat")
+            .addOnCompleteListener {
+                FirebaseDatabase.getInstance().getReference("Chats/$receiverRoom/Status").child(userID).setValue("In Chat")
+            }
+
+        startActivity(
+            Intent(this@MainActivity, ChatActivity::class.java)
+                .putExtra("userID", key)
+                .putExtra("token", token)
+        )
+    }
+
     override fun onResume() {
         super.onResume()
-        chatData.clear()
+        //  IF USER IS ACTIVE ON APP, STORE IT AS ACTIVE USER
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(userID).setValue("Online")
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    override fun onDestroy() {
+        super.onDestroy()
+        //  IF USER CLOSE APP, STORES THE LAST SEEN OF USER
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(userID)
+            .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        //  IF USER MINIMIZE APP, STORES THE LAST SEEN OF USER
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(userID)
+            .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish()
     }
 
 }
