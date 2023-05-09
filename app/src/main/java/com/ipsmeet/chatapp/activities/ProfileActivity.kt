@@ -1,5 +1,6 @@
 package com.ipsmeet.chatapp.activities
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -26,6 +27,8 @@ import com.ipsmeet.chatapp.dataclasses.SignInDataClass
 import dmax.dialog.SpotsDialog
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -56,7 +59,7 @@ class ProfileActivity : AppCompatActivity() {
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 //  fetching user's profile image from firebase-storage
-                val localFile = File.createTempFile("tempfile", "jpeg")
+                val localFile = File.createTempFile("tempFile", "jpeg")
                 FirebaseStorage.getInstance()
                     .getReference("Images/*${snapshot.key}").getFile(localFile)
                     .addOnSuccessListener {
@@ -67,10 +70,10 @@ class ProfileActivity : AppCompatActivity() {
                         Log.d("Fail to load user profiles", it.message.toString())
                     }
 
-                //  fetching user's name and phone-number from firebase-realtime-database
+                //  fetching user's `name`, `phone-number` and `about` from firebase-realtime-database
                 val userProfile = snapshot.getValue(SignInDataClass::class.java)
                 binding.userTxtName.text = userProfile!!.userName
-                if (userProfile.about == "") {
+                if (userProfile.about == "") {      //  if `about` is empty then load default `about`, else show user's `about`
                     binding.userTxtAbout.text = getString(R.string.default_about)
                 }
                 else {
@@ -98,6 +101,7 @@ class ProfileActivity : AppCompatActivity() {
 
     }
 
+    @SuppressLint("QueryPermissionsNeeded")
     private fun updateIMG() {
         val bottomSheetDialog = BottomSheetDialog(this)
         bottomSheetDialog.setContentView(R.layout.bsd_edit_img)
@@ -110,6 +114,7 @@ class ProfileActivity : AppCompatActivity() {
 //                    .putExtra(MediaStore.EXTRA_OUTPUT,  MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
 
                 if (cameraIntent.resolveActivity(packageManager) != null) {
+                    clickPhoto.launch(cameraIntent)
                     startActivityForResult(cameraIntent, 1)
                 }
 
@@ -124,21 +129,19 @@ class ProfileActivity : AppCompatActivity() {
             }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    //  IMAGE FROM CAMERA
+    private val clickPhoto: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        photo = result.data!!.extras!!["data"] as Bitmap
+        binding.userProfileImg.setImageBitmap(photo)
 
-        if (requestCode == 1 && resultCode == RESULT_OK) {
-            photo = data!!.extras!!["data"] as Bitmap
-            binding.userProfileImg.setImageBitmap(photo)
-
-            binding.userProfileImg.isDrawingCacheEnabled = true
-            binding.userProfileImg.buildDrawingCache()
-            val bitmap = (binding.userProfileImg.drawable as BitmapDrawable).bitmap
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-            byteArray = baos.toByteArray()  // to upload we need `ByteArray`
-            uploadImageBITMAP()
-        }
+        binding.userProfileImg.isDrawingCacheEnabled = true
+        binding.userProfileImg.buildDrawingCache()
+        val bitmap = (binding.userProfileImg.drawable as BitmapDrawable).bitmap
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        byteArray = baos.toByteArray()  // to upload we need `ByteArray`
+        uploadImageBITMAP()
     }
 
     private fun uploadImageBITMAP() {
@@ -154,6 +157,7 @@ class ProfileActivity : AppCompatActivity() {
             }
     }
 
+    //  IMAGE FROM GALLERY
     private fun selectImage() {
         val intent = Intent()
         intent.type = "image/*"
@@ -228,9 +232,24 @@ class ProfileActivity : AppCompatActivity() {
         finish()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         super.onBackPressed()
         updateUI()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        //  IF USER IS ACTIVE ON APP, STORE IT AS ACTIVE USER
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(userID).setValue("Online")
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        //  IF USER MINIMIZE APP, STORES THE LAST SEEN OF USER
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(userID)
+            .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
     }
 
 }

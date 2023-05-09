@@ -16,7 +16,7 @@ import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import de.hdodenhof.circleimageview.CircleImageView
 import java.io.File
 
-class FoundUserAdapter(val context: Context, private val foundUser: UserDataClass, val listener: OnClick)
+class FoundUserAdapter(val context: Context, private val foundUser: UserDataClass, private val listener: OnClick)
     : RecyclerView.Adapter<FoundUserAdapter.UserViewHolder>() {
 
     class UserViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
@@ -36,7 +36,7 @@ class FoundUserAdapter(val context: Context, private val foundUser: UserDataClas
     }
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
-        val localFile = File.createTempFile("tempfile", "jpeg")
+        val localFile = File.createTempFile("tempFile", "jpeg")
         FirebaseStorage.getInstance().getReference("Images/*${ foundUser.key }").getFile(localFile)
             .addOnSuccessListener {
                 val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)

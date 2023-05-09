@@ -75,10 +75,9 @@ class MainActivity : AppCompatActivity() {
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 chatData.clear()
+
                 if (snapshot.exists()) {
                     for (item in snapshot.children) {
-                        Log.d("item", item.value.toString())
-
                         FirebaseDatabase.getInstance().getReference("Users").orderByChild("userName")
                             .addValueEventListener(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -87,7 +86,6 @@ class MainActivity : AppCompatActivity() {
                                             if (i.key.toString() == item.value.toString()) {
                                                 val showData = i.getValue(UserDataClass::class.java)
                                                 showData!!.key = i.key.toString()
-                                                Log.d("showData.phoneNumber", showData.phoneNumber)
                                                 chatData.add(showData)
 
                                                 binding.mainRecyclerView.apply {
@@ -101,9 +99,6 @@ class MainActivity : AppCompatActivity() {
 
                                                                 //  open dialog-box to show profile image
                                                                 override fun viewProfilePopup(key: String, token: String) {
-                                                                    Log.d("key", key)
-                                                                    Log.d("token", token)
-
                                                                     val bindDialog: PopupViewProfileBinding = PopupViewProfileBinding.inflate(LayoutInflater.from(this@MainActivity))
 
                                                                     val dialog = Dialog(this@MainActivity)
@@ -118,11 +113,9 @@ class MainActivity : AppCompatActivity() {
                                                                                         val data = snapshot.getValue(UserDataClass::class.java)
                                                                                         data!!.key = snapshot.key.toString()
                                                                                         bindDialog.popupViewName.text = data.userName
-                                                                                        Log.d("data.userName", data.userName)
 
                                                                                         //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
-                                                                                        val localFile =
-                                                                                            File.createTempFile("tempFile","jpeg")
+                                                                                        val localFile = File.createTempFile("tempFile","jpeg")
                                                                                         FirebaseStorage.getInstance().getReference("Images/*${key}").getFile(localFile)
                                                                                             .addOnSuccessListener {
                                                                                                 val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
@@ -193,12 +186,10 @@ class MainActivity : AppCompatActivity() {
                                     foundUsersKey = user.key
                                     //  AND STORING THAT PHONE NUMBER IN ARRAY-LIST
                                     listPhoneNumbers.add(user.phoneNumber)
-                                    Log.d("listPhoneNumbers", listPhoneNumbers.toString())
 
                                     //  IF ENTERED NUMBER EXISTS IN THE LIST
                                     for (num in listPhoneNumbers) {
                                         if (bindingDialog.edtxtFindPhone.text.toString() == num) {
-                                            Log.d("matched number", num)
                                             matchedNumber =
                                                 num     // STORE NUMBER AS `matchedNumber`
                                         }
@@ -206,7 +197,6 @@ class MainActivity : AppCompatActivity() {
 
                                     //  FETCH USER'S userID AS PER `matchedNumber`
                                     if (matchedNumber == user.phoneNumber) {
-                                        Log.d("user.key", user.key)
                                         bindingDialog.recyclerViewFoundUSer.apply {
                                             layoutManager = LinearLayoutManager(
                                                 dialog.context,
@@ -242,21 +232,12 @@ class MainActivity : AppCompatActivity() {
                     .addValueEventListener(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             if (snapshot.exists()) {
-                                Log.d("snapshot", snapshot.toString())
-                                Log.d("snapshot.children", snapshot.children.toString())
-                                Log.d("snapshot.key", snapshot.key.toString())
-                                Log.d("snapshot.value", snapshot.value.toString())
-
                                 for (n in snapshot.children) {
-                                    Log.d("n", n.toString())
                                     val fList = n.value.toString()
-                                    Log.d("List", fList)
                                     friendList.add(fList)
-                                    Log.d("friendList", friendList.toString())
-
                                 }
+
                                 for (a in friendList) {
-                                    Log.d("a", a)
                                     if (foundUsersKey == a) {
                                         dialog.dismiss()
                                         val d = Dialog(this@MainActivity)
@@ -316,6 +297,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //  SIGN-OUT, JUMP TO LOGIN PAGE
     private fun updateUI() {
         startActivity(
             Intent(this, SignInActivity::class.java)
@@ -375,6 +357,7 @@ class MainActivity : AppCompatActivity() {
             .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         super.onBackPressed()
         finish()

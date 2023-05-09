@@ -81,7 +81,7 @@ class ChatAdapter(private val context: Context, private val chatList: List<UserD
                 }
             })
 
-        //  while user is on someone's chat
+        //  while user is in someone's chat
         FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Status/${ chatList[position].key }")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {

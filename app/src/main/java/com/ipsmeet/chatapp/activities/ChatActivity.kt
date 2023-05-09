@@ -64,6 +64,7 @@ class ChatActivity : AppCompatActivity() {
 
     lateinit var handler: Handler
 
+    @SuppressLint("SimpleDateFormat")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,7 +77,7 @@ class ChatActivity : AppCompatActivity() {
 
         senderID = FirebaseAuth.getInstance().currentUser!!.uid   // ID of logged-in user
         receiverID = intent.getStringExtra("userID").toString()   // ID of other person
-        receiverToken = intent.getStringExtra("token").toString()   // token of other person
+        receiverToken = intent.getStringExtra("token").toString()   // TOKEN of other person
 
         //  creating room, for chat, to store data users-vise
         senderRoom = senderID + receiverID
@@ -96,6 +97,7 @@ class ChatActivity : AppCompatActivity() {
             openProfile()
         }
 
+        //  MESSAGE ADAPTER
         val linearLayoutManager = LinearLayoutManager(this)
         linearLayoutManager.stackFromEnd = true
         messagesAdapter = MessagesAdapter(this@ChatActivity, chats,
@@ -152,11 +154,8 @@ class ChatActivity : AppCompatActivity() {
                     data!!.key = snapshot.key.toString()
                     binding.commsName.text = data.userName
 
-                    Log.d("key", data.key)
-                    Log.d("token", data.token)
-
                     //  FETCHING USER PROFILE FROM FIREBASE-STORAGE
-                    val localFile = File.createTempFile("tempfile", "jpeg")
+                    val localFile = File.createTempFile("tempFile", "jpeg")
                     FirebaseStorage.getInstance()
                         .getReference("Images/*${snapshot.key}").getFile(localFile)
                         .addOnSuccessListener {
@@ -177,6 +176,7 @@ class ChatActivity : AppCompatActivity() {
         //  FETCHING CHATS
         chatReference = FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Messages")
         chatReference.addValueEventListener(object : ValueEventListener {
+            @SuppressLint("NotifyDataSetChanged")
             override fun onDataChange(snapshot: DataSnapshot) {
                 chats.clear()
                 if (snapshot.exists()) {
@@ -218,8 +218,10 @@ class ChatActivity : AppCompatActivity() {
                 }
             })
 
+        //  `TextWatcher` on edittext
         binding.commsTypeMsg.addTextChangedListener(messageSend)
 
+        //  send message in chat
         binding.btnSendMsg.setOnClickListener {
             chats.clear()
             val msg = MessagesDataClass(
@@ -230,7 +232,7 @@ class ChatActivity : AppCompatActivity() {
 
             val pushKey = FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Messages").push().key
 
-            //  CREATING CHAT-ROOM TO STORE CHATS
+            //  CREATING CHAT-ROOMS TO STORE CHATS
             firebaseDatabase.getReference("Chats")
                 .child(senderRoom)
                 .child("Messages")
@@ -246,14 +248,15 @@ class ChatActivity : AppCompatActivity() {
                             sendNotification(name, message, receiverToken)  // passing required parameters to send notification
                         }
                 }
-
             binding.commsTypeMsg.setText("")
         }
 
+        //  image from gallery
         binding.sendAttach.setOnClickListener {
             selectImage()
         }
 
+        //  image from camera
         binding.sendCam.setOnClickListener {
             openCamera()
         }
@@ -298,9 +301,11 @@ class ChatActivity : AppCompatActivity() {
         )
     }
 
+    @SuppressLint("SimpleDateFormat")
     private val clickPhoto: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             progress.show()
+
             val photo = result.data!!.extras!!["data"] as Bitmap
             val baos = ByteArrayOutputStream()
             photo.compress(Bitmap.CompressFormat.JPEG, 100, baos)
@@ -364,6 +369,7 @@ class ChatActivity : AppCompatActivity() {
         imagePicker.launch(intent)
     }
 
+    @SuppressLint("SimpleDateFormat")
     private val imagePicker: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             progress.show()
@@ -463,9 +469,9 @@ class ChatActivity : AppCompatActivity() {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
-        finish()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         super.onBackPressed()
         updateUI()
@@ -498,14 +504,14 @@ class ChatActivity : AppCompatActivity() {
         data.put("title", "Title of Your Notification in Title")
         data.put("body", "Click here")
 
-        //  combining all the data into one as notificationData
+        //  combining all the data into one as `notificationData`
         val notificationData = JSONObject()
         notificationData.put("to", token)   //  `here `token` is the token of other person
         notificationData.put("collapse_key", "type_a")
         notificationData.put("notification", jsonObject)    //  notification data
         notificationData.put("data", data)
 
-        //  adding Header in request
+        //  adding `Header` in request
         val jsonObjectRequest = object : JsonObjectRequest(Method.POST, url, notificationData,
             object : Response.Listener<JSONObject?> {
                 override fun onResponse(response: JSONObject?) {
@@ -528,10 +534,22 @@ class ChatActivity : AppCompatActivity() {
         requestQueue.add(jsonObjectRequest)
     }
 
+    override fun onResume() {
+        super.onResume()
+        //  IF USER IS ACTIVE ON APP, STORE IT AS ACTIVE USER
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(senderID).setValue("Online")
+        FirebaseDatabase.getInstance().getReference("Chats/$senderRoom/Status/$senderID").setValue("In Chat")
+        FirebaseDatabase.getInstance().getReference("Chats/$receiverRoom/Status/$senderID").setValue("In Chat")
+        personsStatus()
+    }
+
     @SuppressLint("SimpleDateFormat")
     override fun onStop() {
         super.onStop()
         FirebaseDatabase.getInstance().reference.child("Chats/$receiverRoom/Status/$senderID")
+            .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
+
+        FirebaseDatabase.getInstance().reference.child("Chats/$senderRoom/Status/$senderID")
             .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
     }
 

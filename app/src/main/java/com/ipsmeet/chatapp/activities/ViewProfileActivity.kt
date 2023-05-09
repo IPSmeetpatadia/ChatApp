@@ -25,6 +25,7 @@ class ViewProfileActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityViewProfileBinding
 
+    private lateinit var currentUserID: String
     private lateinit var personID: String
     private lateinit var personToken: String
 
@@ -35,6 +36,7 @@ class ViewProfileActivity : AppCompatActivity() {
 
         supportActionBar!!.hide()
 
+        currentUserID = FirebaseAuth.getInstance().currentUser!!.uid
         personID = intent.getStringExtra("userID").toString()   // ID of other person
         personToken = intent.getStringExtra("token").toString()   // token of other person
 
@@ -114,22 +116,20 @@ class ViewProfileActivity : AppCompatActivity() {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)    // activity will become the start of a new task on this history stack
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // activity becomes the new root of an otherwise empty task, and any old activities are finished
         )
-        finish()
     }
 
     override fun onResume() {
         super.onResume()
         //  IF USER IS ACTIVE ON APP, STORE IT AS ACTIVE USER
-        FirebaseDatabase.getInstance().reference.child("Active Users")
-            .child(FirebaseAuth.getInstance().currentUser!!.uid).setValue("Online")
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(currentUserID).setValue("Online")
     }
 
     @SuppressLint("SimpleDateFormat")
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         //  IF USER MINIMIZE APP, STORES THE LAST SEEN OF USER
-        FirebaseDatabase.getInstance().reference.child("Active Users")
-            .child(FirebaseAuth.getInstance().currentUser!!.uid)
+        FirebaseDatabase.getInstance().reference.child("Active Users").child(currentUserID)
             .setValue("Last seen at ${ SimpleDateFormat("hh:mm aa").format(Calendar.getInstance().time) }")
     }
+
 }
