@@ -32,6 +32,7 @@ import com.ipsmeet.chatapp.dataclasses.UserDataClass
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity() {
@@ -74,8 +75,7 @@ class MainActivity : AppCompatActivity() {
         databaseReference = FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                chatData.clear()
-
+                chatData = ArrayList()
                 if (snapshot.exists()) {
                     for (item in snapshot.children) {
                         FirebaseDatabase.getInstance().getReference("Users").orderByChild("userName")
@@ -190,22 +190,16 @@ class MainActivity : AppCompatActivity() {
                                     //  IF ENTERED NUMBER EXISTS IN THE LIST
                                     for (num in listPhoneNumbers) {
                                         if (bindingDialog.edtxtFindPhone.text.toString() == num) {
-                                            matchedNumber =
-                                                num     // STORE NUMBER AS `matchedNumber`
+                                            matchedNumber = num     // STORE NUMBER AS `matchedNumber`
                                         }
                                     }
 
                                     //  FETCH USER'S userID AS PER `matchedNumber`
                                     if (matchedNumber == user.phoneNumber) {
                                         bindingDialog.recyclerViewFoundUSer.apply {
-                                            layoutManager = LinearLayoutManager(
-                                                dialog.context,
-                                                LinearLayoutManager.VERTICAL,
-                                                false
-                                            )
+                                            layoutManager = LinearLayoutManager(dialog.context, LinearLayoutManager.VERTICAL, false)
                                             adapter = FoundUserAdapter(dialog.context, user,
-                                                object :
-                                                    FoundUserAdapter.OnClick {     // AND STORE IT IN `Friend List`
+                                                object : FoundUserAdapter.OnClick {     // AND STORE IT IN `Friend List`
                                                     override fun clickListener(key: String) {
                                                         FirebaseDatabase.getInstance()
                                                             .getReference("Users/$userID")
@@ -213,7 +207,6 @@ class MainActivity : AppCompatActivity() {
                                                             .push()
                                                             .setValue(key)
                                                         dialog.dismiss()
-                                                        chatData.clear()
                                                     }
                                                 })
                                         }
@@ -227,7 +220,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     })
 
-                //  IF USER IS ALREADY ADDED AS FRIEND
+                /*//  IF USER IS ALREADY ADDED AS FRIEND
                 FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
                     .addValueEventListener(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
@@ -252,7 +245,7 @@ class MainActivity : AppCompatActivity() {
                         override fun onCancelled(error: DatabaseError) {
                             Log.d("Failed to load Friend List", error.message)
                         }
-                    })
+                    })*/
             }
         }
     }
@@ -337,6 +330,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        chatData.clear()
         //  IF USER IS ACTIVE ON APP, STORE IT AS ACTIVE USER
         FirebaseDatabase.getInstance().reference.child("Active Users").child(userID).setValue("Online")
     }
