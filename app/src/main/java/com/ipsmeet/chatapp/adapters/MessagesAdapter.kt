@@ -115,6 +115,8 @@ class MessagesAdapter(private val context: Context, private val messages: List<M
                 viewHolder.receiverTime.text = messages[position].timeStamp
             }
         }
+
+
     }
 
     interface MessageActionListener {

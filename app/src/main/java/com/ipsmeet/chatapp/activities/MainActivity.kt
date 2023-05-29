@@ -220,8 +220,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     })
 
-                /*//  IF USER IS ALREADY ADDED AS FRIEND
-                FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
+                //  IF USER IS ALREADY ADDED AS FRIEND
+                /*FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
                     .addValueEventListener(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             if (snapshot.exists()) {
@@ -358,3 +358,171 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+
+/*
+                    usersFetched.clear()
+                    chatData.clear()
+                    if (snapshot.exists()) {
+                        for (users in snapshot.children) {
+                            val data = users.getValue(UserDataClass::class.java)
+                            data?.key = users?.key.toString()
+                            usersFetched.add(data!!)
+                            listPhoneNumbers.add(data.phoneNumber)
+                            Log.d("usersFetched", usersFetched.toString())
+                            Log.d("data?.key", users.key.toString().toString())
+
+                        }
+                        Log.d("usersFetched display", usersFetched.toString())
+                        Log.d("friendList display", friendList.toString())
+
+                        Log.d("usersFetched.size-1 display", (friendList.size - 1).toString())
+
+                        for (i in 0..(friendList.size - 1)) {
+
+                            Log.d("friendList[i]", friendList[i])
+
+                            for (j in 0..usersFetched.size - 1) {
+                                Log.d("usersFetched[j]", usersFetched[j].toString())
+                                if (usersFetched[j].key == friendList[i] && userID != friendList[i]) {
+                                    chatData.add(usersFetched[j])
+                                }
+                            }
+                        }
+                        Log.d("usersFetched", usersFetched.toString())
+                        Log.d("chatData.toString()", chatData.toString())
+                        binding.mainRecyclerView.apply {
+                            layoutManager = LinearLayoutManager(
+                                this@MainActivity,
+                                LinearLayoutManager.VERTICAL,
+                                false
+                            )
+                            adapter = ChatAdapter(this@MainActivity, chatData,
+                                object : ChatAdapter.OnClick {
+                                    override fun openChat(key: String, token: String) {
+
+                                    }
+
+                                    override fun viewProfilePopup(key: String, token: String) {
+                                        TODO("Not yet implemented")
+                                    }
+                                })
+                        }
+
+                    }*/
+
+/*
+        //  ADD FRIENDS
+        /*binding.mainBtnFAB.setOnClickListener {
+            bindingDialog = LayoutAddFriendsBinding.inflate(LayoutInflater.from(this))
+
+            dialog = Dialog(this)
+            dialog.setContentView(bindingDialog.root)
+            dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.show()
+
+            bindingDialog.layoutSearch.setOnClickListener {
+                var matchedNumber = ""
+
+                //  FETCHING ALL THE PHONE NUMBERS
+                FirebaseDatabase.getInstance().getReference("Users")
+                    .addValueEventListener(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (snapshot.exists()) {
+                                var user = UserDataClass()
+                                var isAlreaduyAdded = true
+                                val userData = UserDataClass()
+                                for (i in snapshot.children) {
+                                    user = i.getValue(UserDataClass::class.java)!!
+                                    user!!.key = i.key.toString()
+                                    foundUsersKey = user.key
+
+                                    //  AND STORING THAT PHONE NUMBER IN ARRAY-LIST
+                                    listPhoneNumbers.add(user.phoneNumber)
+
+                                    //  IF ENTERED NUMBER EXISTS IN THE LIST
+                                    val userNumber =
+                                        FirebaseAuth.getInstance().currentUser?.phoneNumber
+                                    for (num in listPhoneNumbers) {
+                                        Log.d("num", num.toString())
+                                        if (bindingDialog.edtxtFindPhone.text.toString() == num && bindingDialog.edtxtFindPhone.text.toString() != userNumber) {
+                                            matchedNumber = num     // STORE NUMBER AS `matchedNumber`
+                                            Log.d("matchedNumber", matchedNumber.toString())
+                                            isAlreaduyAdded = false
+                                            break
+                                        }
+                                    }
+
+                                    for( number in chatData ){
+                                        if(number.phoneNumber.equals(matchedNumber)){
+                                            isAlreaduyAdded = false
+                                        }else{
+                                            is
+                                        }
+                                    }
+
+                                    //  FETCH USER'S userID AS PER `matchedNumber`
+                                    //  IF USER IS ALREADY ADDED AS FRIEND
+                                 *//*   FirebaseDatabase.getInstance().getReference("Users/$userID/Friend List")
+                                        .addValueEventListener(object : ValueEventListener {
+                                            override fun onDataChange(snapshot: DataSnapshot) {
+                                                if (snapshot.exists()) {
+                                                    for (n in snapshot.children) {
+                                                        val fList = n.value.toString()
+                                                        friendList.add(fList)
+                                                    }
+
+                                                    for (a in friendList) {
+                                                        if (foundUsersKey == a) {
+                                                            dialog.dismiss()
+                                                            break
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            override fun onCancelled(error: DatabaseError) {
+                                                Log.d("Failed to load Friend List", error.message)
+                                            }
+                                        })
+
+                                       else{
+                                            continue
+                                        }*/
+                                    if(isAlreaduyAdded){
+                                        bindingDialog.recyclerViewFoundUSer.apply {
+                                            layoutManager = LinearLayoutManager(
+                                                dialog.context,
+                                                LinearLayoutManager.VERTICAL,
+                                                false
+                                            )
+                                            adapter = FoundUserAdapter(dialog.context, user,
+                                                object :
+                                                    FoundUserAdapter.OnClick {     // AND STORE IT IN `Friend List`
+                                                    override fun clickListener(key: String) {
+                                                        FirebaseDatabase.getInstance()
+                                                            .getReference("Users/$userID")
+                                                            .child("Friend List")
+                                                            .push()
+                                                            .setValue(key)
+                                                        dialog.dismiss()
+                                                    }
+                                                })
+                                        }
+                                    }else{
+                                        val d = Dialog(this@MainActivity)
+                                        d.setContentView(R.layout.layout_user_exists)
+                                        d.show()
+                                    }
+
+                                }
+
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.d("Failed to find user", error.message)
+                        }
+                    })
+
+            }
+        }*/
